@@ -7,12 +7,16 @@ using UnityEngine;
 [Serializable]
 public class CustomNavPath
 {
-    [SerializeField] List<CustomNavPoint> navigationPoints = new List<CustomNavPoint>(); 
-    public List<CustomNavPoint> NavigationPoints { get {return navigationPoints; }}
+    [SerializeField] List<Vector3> pathPoints = new List<Vector3>(); 
+    public List<Vector3> PathPoints { get {return pathPoints; }}
 
    
-    public void SetPath(List<CustomNavPoint> _pathPoints)
+    public void SetPath(List<Triangle> _pathTriangle)
     {
-        navigationPoints = _pathPoints; 
+        pathPoints.Clear();
+        foreach (Triangle t in _pathTriangle)
+        {
+            pathPoints.Add(t.CenterPosition); 
+        }
     }
 }

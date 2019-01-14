@@ -46,13 +46,13 @@ public class CustomNavMeshAgent : MonoBehaviour
         isMoving = true; 
         CustomNavPath _pathToFollow = CurrentPath;
         int _index = 1;
-        while (Vector3.Distance(transform.position, _pathToFollow.NavigationPoints.Last().Position) > .5f)
+        while (Vector3.Distance(transform.position, _pathToFollow.PathPoints.Last()) > .5f)
         {
-            if (Vector3.Distance(transform.position, _pathToFollow.NavigationPoints[_index].Position) <= .5f)
+            if (Vector3.Distance(transform.position, _pathToFollow.PathPoints[_index]) <= .5f)
             {
                 _index = _index + 1;
             }
-            transform.position = Vector3.MoveTowards(transform.position, _pathToFollow.NavigationPoints[_index].Position, Time.deltaTime * _speed);
+            transform.position = Vector3.MoveTowards(transform.position, _pathToFollow.PathPoints[_index], Time.deltaTime * _speed);
             yield return new WaitForEndOfFrame();
         }
         yield return new WaitForEndOfFrame();
@@ -78,13 +78,13 @@ public class CustomNavMeshAgent : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red; 
-        for (int i = 0; i < currentPath.NavigationPoints.Count; i++)
+        for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
-            Gizmos.DrawSphere(currentPath.NavigationPoints[i].Position, .2f); 
+            Gizmos.DrawSphere(currentPath.PathPoints[i], .5f); 
         }
-        for (int i = 0; i < currentPath.NavigationPoints.Count - 1 ; i++)
+        for (int i = 0; i < currentPath.PathPoints.Count - 1 ; i++)
         {
-            Gizmos.DrawLine(currentPath.NavigationPoints[i].Position, currentPath.NavigationPoints[i + 1].Position); 
+            Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]); 
         }
     }
     #endregion

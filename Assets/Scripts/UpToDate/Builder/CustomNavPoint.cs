@@ -31,14 +31,12 @@ public class CustomNavPoint
         }
     }
 
-    [SerializeField] float xPos, yPos, zPos; 
+    [SerializeField] float xPos, yPos, zPos;
 
+    /* LEGACY
     public bool HasBeenSelected { get; set; }
 
-    //[SerializeField] List<Triangle> linkedTriangles = new List<Triangle>(); 
-    //public List<Triangle> LinkedTriangles { get { return linkedTriangles;  } }
-
-    private float heuristicPriority; 
+    private float heuristicPriority;
     public float HeuristicPriority
     {
         get
@@ -48,12 +46,14 @@ public class CustomNavPoint
         set
         {
             heuristicPriority = value;
-            HeuristicCostToDestination = heuristicPriority - HeuristicCostFromStart; 
+            HeuristicCostToDestination = heuristicPriority - HeuristicCostFromStart;
         }
-    } 
+    }
 
     public float HeuristicCostFromStart { get; set; }
     public float HeuristicCostToDestination { get; set; }
+    */
+
     #endregion
 
     #region Constructor

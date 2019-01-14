@@ -146,7 +146,8 @@ public class CustomNavMeshBuilder : EditorWindow
         }
         foreach (Triangle t in triangles)
         {
-            LinkTriangles(t); 
+            LinkTriangles(t);
+            Debug.Log(t.LinkedTriangles.Count); 
         }
         isBuilding = false;
         SaveDatas(); 
@@ -161,12 +162,12 @@ public class CustomNavMeshBuilder : EditorWindow
         for (int i = 0; i < triangles.Count; i++)
         {
             // IF TRIANGLES ARE THE SAME, DON'T COMPARE THEM
-            if (triangles[i] != _triangle && !triangles[i].HasBeenLinked)
+            if (triangles[i] != _triangle /*&& !triangles[i].HasBeenLinked*/)
             {
                 // GET THE VERTICES IN COMMON
                 CustomNavPoint[] _verticesInCommon = GetVerticesInCommon(_triangle, triangles[i]);
                 // CHECK IF THERE IS THE RIGHT AMMOUNT OF VERTICES IN COMMON
-                if (_verticesInCommon.Length > 0)
+                if (_verticesInCommon.Length == 2)
                 {
                     _triangle.LinkedTriangles.Add(triangles[i]);
                 }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq; 
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random; 
 
 /*
 [Script Header] TDS_NavMeshManager Version 0.0.1
@@ -54,7 +55,7 @@ public class CustomNavMeshManager : MonoBehaviour
     void LoadDatas(Scene _scene, LoadSceneMode _mode)
     {
         CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
-        string _sceneName = _scene.name;
+        string _sceneName = SceneManager.GetActiveScene().name;
         string _directoryName = CustomNavDataLoader.DirectoryPath;
         CustomNavData _datas = _loader.LoadFile(_directoryName, _sceneName);
         triangles = _datas.TrianglesInfos;
@@ -88,12 +89,12 @@ public class CustomNavMeshManager : MonoBehaviour
     {
         
         if (triangles.Count == 0) return;
-        Gizmos.color = Color.green;
         foreach (Triangle triangle in triangles)
         {
+            Gizmos.color = Color.green;
             for (int i = 0; i < triangle.Vertices.Length; i++)
             {
-                Gizmos.DrawSphere(triangle.Vertices[i].Position, .5f);
+                Gizmos.DrawSphere(triangle.Vertices[i].Position, .1f);
                 if (i < 2)
                 {
                     Gizmos.DrawLine(triangle.Vertices[i].Position, triangle.Vertices[i + 1].Position);
@@ -103,10 +104,14 @@ public class CustomNavMeshManager : MonoBehaviour
                     Gizmos.DrawLine(triangle.Vertices[i].Position, triangle.Vertices[0].Position);
                 }
             }
+            Gizmos.color = Color.red;
+            for (int i = 0; i < triangle.LinkedTriangles.Count; i++)
+            {
+                Gizmos.DrawLine(triangle.CenterPosition, triangle.LinkedTriangles[i].CenterPosition);
+            }
+
         }        
     }
-
-    
     #endregion
 
 }

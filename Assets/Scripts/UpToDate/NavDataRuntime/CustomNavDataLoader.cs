@@ -66,6 +66,7 @@ public static class CustomNavDataLoader
                 */
                 // WRITE THE FILE ANYWAY
                 File.WriteAllBytes(_filePath, _datas);
+                Debug.Log($"{_fileName} successfully created in binary file"); 
             }
         }
     }

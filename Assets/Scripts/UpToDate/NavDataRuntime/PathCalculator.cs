@@ -45,22 +45,19 @@ public static class PathCalculator
     /// <param name="_destination">The Destination of the path</param>
     /// <param name="_path">The path to set</param>
     /// <returns>Return if the path can be calculated</returns>
-    public static bool CalculatePath(Vector3 _origin, Vector3 _destination, CustomNavPath _path, List<Triangle> trianglesDatas)
+    public static bool CalculatePath(Vector3 _origin, Vector3 _destination, CustomNavPath _path, List<Triangle> _trianglesDatas)
     {
         // GET TRIANGLES
         // Get the origin triangle and the destination triangle
-        Triangle _currentTriangle = GetTriangleContainingPosition(_origin, trianglesDatas);
-        Triangle _targetedTriangle = GetTriangleContainingPosition(_destination, trianglesDatas);
+        Triangle _originTriangle = GetTriangleContainingPosition(_origin, _trianglesDatas);
+        Triangle _targetedTriangle = GetTriangleContainingPosition(_destination, _trianglesDatas);
+
+        /* LEGACY
 
         // CREATE POINTS
         CustomNavPoint _currentPoint = null;
         //Create a point on the origin position
         CustomNavPoint _originPoint = new CustomNavPoint(_origin, -1);
-
-        /*OLD
-        //Get the linked triangles for the origin point
-        _originPoint.LinkedTriangles.Add(_currentTriangle);
-        */
 
         //Create a point on the destination position
         CustomNavPoint _destinationPoint = new CustomNavPoint(_destination, -2);
@@ -72,60 +69,69 @@ public static class PathCalculator
         List<CustomNavPoint> _openList = new List<CustomNavPoint>();
         Dictionary<CustomNavPoint, CustomNavPoint> _cameFrom = new Dictionary<CustomNavPoint, CustomNavPoint>();
 
+        */
+
+        List<Triangle> _openList = new List<Triangle>();
+        Dictionary<Triangle, Triangle> _cameFrom = new Dictionary<Triangle, Triangle>();
+
+        Triangle _currentTriangle = null; 
+
         /* ASTAR: Algorithm*/
         // Add the origin point to the open and close List
         //Set its heuristic cost and its selection state
-        _openList.Add(_originPoint);
-        _originPoint.HeuristicCostFromStart = 0;
-        _originPoint.HasBeenSelected = true;
-        _cameFrom.Add(_originPoint, _originPoint);
+        _openList.Add(_originTriangle);
+        _originTriangle.HeuristicCostFromStart = 0;
+        _originTriangle.HasBeenSelected = true;
+        _cameFrom.Add(_originTriangle, _originTriangle);
         float _cost = 0;
         while (_openList.Count > 0)
         {
             //Get the point with the best heuristic cost
-            _currentPoint = GetBestPoint(_openList);
+            _currentTriangle = GetBestTriangle(_openList);
             //If this point is in the targeted triangle, 
-            if (GetTrianglesFromPoint(_currentPoint, trianglesDatas).Contains(_targetedTriangle))
+            if (_currentTriangle == _targetedTriangle)
             {
-                _cost = _currentPoint.HeuristicCostFromStart + HeuristicCost(_currentPoint, _destinationPoint);
-                _destinationPoint.HeuristicCostFromStart = _cost;
+                _cost = _currentTriangle.HeuristicCostFromStart + HeuristicCost(_currentTriangle, _targetedTriangle);
+                _targetedTriangle.HeuristicCostFromStart = _cost;
                 //add the destination point to the close list and set the previous point to the current point or to the parent of the current point if it is in Line of sight 
-                _cameFrom.Add(_destinationPoint, _currentPoint);
+
+                //_cameFrom.Add(_targetedTriangle, _currentTriangle);
+
                 //Build the path
                 BuildPath(_cameFrom, _path);
                 //Clear all points selection state
-                foreach (CustomNavPoint point in _openList)
+                foreach (Triangle t in _openList)
                 {
-                    point.HasBeenSelected = false;
+                    t.HasBeenSelected = false;
                 }
                 return true;
             }
             //Get all linked points from the current point
-            _linkedPoints = GetLinkedPoints(_currentPoint, trianglesDatas);
-            for (int i = 0; i < _linkedPoints.Length; i++)
+            //_linkedPoints = GetLinkedPoints(_currentPoint, trianglesDatas);
+            for (int i = 0; i < _currentTriangle.LinkedTriangles.Count; i++)
             {
-                CustomNavPoint _linkedPoint = _linkedPoints[i];
+                Triangle _linkedTriangle = _currentTriangle.LinkedTriangles[i];
                 // If the linked points is not selected yet
-                if (!_linkedPoint.HasBeenSelected)
+                if (!_linkedTriangle.HasBeenSelected)
                 {
                     // Calculate the heuristic cost from start of the linked point
-                    _cost = _currentPoint.HeuristicCostFromStart + HeuristicCost(_currentPoint, _linkedPoint);
-                    _linkedPoint.HeuristicCostFromStart = _cost;
-                    if (!_openList.Contains(_linkedPoint) || _cost < _linkedPoint.HeuristicCostFromStart)
+                    _cost = _currentTriangle.HeuristicCostFromStart + HeuristicCost(_currentTriangle, _linkedTriangle);
+                    _linkedTriangle.HeuristicCostFromStart = _cost;
+                    if (!_openList.Contains(_linkedTriangle) || _cost < _linkedTriangle.HeuristicCostFromStart)
                     {
                         // Set the heuristic cost from start for the linked point
-                        _linkedPoint.HeuristicCostFromStart = _cost;
+                        _linkedTriangle.HeuristicCostFromStart = _cost;
                         //Its heuristic cost is equal to its cost from start plus the heuristic cost between the point and the destination
-                        _linkedPoint.HeuristicPriority = HeuristicCost(_linkedPoint, _destinationPoint) + _cost;
+                        _linkedTriangle.HeuristicPriority = HeuristicCost(_linkedTriangle, _targetedTriangle) + _cost;
                         //Set the point selected and add it to the open and closed list
-                        _linkedPoint.HasBeenSelected = true;
-                        _openList.Add(_linkedPoint);
-                        _cameFrom.Add(_linkedPoint, _currentPoint);
+                        _linkedTriangle.HasBeenSelected = true;
+                        _openList.Add(_linkedTriangle);
+                        _cameFrom.Add(_linkedTriangle, _currentTriangle);
                     }
                 }
             }
         }
-
+        Debug.Log("PAPOSSIBLE"); 
         return false;
     }
 
@@ -143,6 +149,19 @@ public static class PathCalculator
     static float HeuristicCost(CustomNavPoint _a, CustomNavPoint _b)
     {
         return Vector3.Distance(_a.Position, _b.Position);
+    }
+
+    /// <summary>
+    /// Return the heuristic cost between 2 triangles
+    /// Heuristic cost is the distance between 2 points
+    /// => Can add a multiplier to change the cost of the movement depending on the point 
+    /// </summary>
+    /// <param name="_a">First Triangle</param>
+    /// <param name="_b">Second Triangle</param>
+    /// <returns>Heuristic Cost between 2 points</returns>
+    static float HeuristicCost(Triangle _a, Triangle _b)
+    {
+        return Vector3.Distance(_a.CenterPosition, _b.CenterPosition);
     }
     #endregion 
 
@@ -216,26 +235,27 @@ public static class PathCalculator
     /// Get the point with the best heuristic cost from a list 
     /// Remove this point from the list and return it
     /// </summary>
-    /// <param name="_points">list where the points are</param>
+    /// <param name="_triangles">list where the points are</param>
     /// <returns>point with the best heuristic cost</returns>
-    static CustomNavPoint GetBestPoint(List<CustomNavPoint> _points)
+    static Triangle GetBestTriangle(List<Triangle> _triangles)
     {
         int bestIndex = 0;
-        for (int i = 0; i < _points.Count; i++)
+        for (int i = 0; i < _triangles.Count; i++)
         {
-            if (_points[i].HeuristicPriority < _points[bestIndex].HeuristicPriority)
+            if (_triangles[i].HeuristicPriority < _triangles[bestIndex].HeuristicPriority)
             {
                 bestIndex = i;
             }
         }
 
-        CustomNavPoint _bestNavPoint = _points[bestIndex];
-        _points.RemoveAt(bestIndex);
-        return _bestNavPoint;
+        Triangle _bestNavTriangle = _triangles[bestIndex];
+        _triangles.RemoveAt(bestIndex);
+        return _bestNavTriangle;
     }
     #endregion
 
     #region void 
+    /* LEGACY
     /// <summary>
     /// Build a path using Astar resources
     /// Get the last point and get all its parent to build the path
@@ -253,6 +273,25 @@ public static class PathCalculator
         _pathPoints.Add(_currentPoint);
         _pathPoints.Reverse();
         _path.SetPath(_pathPoints); 
+    }
+    */
+    /// <summary>
+    /// Build a path using Astar resources
+    /// Get the last point and get all its parent to build the path
+    /// </summary>
+    /// <param name="_pathToBuild">Astar resources</param>
+    static void BuildPath(Dictionary<Triangle, Triangle> _pathToBuild, CustomNavPath _path)
+    {
+        Triangle _currentPoint = _pathToBuild.Last().Key;
+        List<Triangle> _trianglePath = new List<Triangle>();
+        while (_currentPoint != _pathToBuild.First().Key)
+        {
+            _trianglePath.Add(_currentPoint);
+            _currentPoint = _pathToBuild[_currentPoint];
+        }
+        _trianglePath.Add(_currentPoint);
+        _trianglePath.Reverse();
+        _path.SetPath(_trianglePath);
     }
     #endregion
 
