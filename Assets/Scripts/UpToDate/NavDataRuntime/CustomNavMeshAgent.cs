@@ -31,11 +31,8 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <param name="_position">destination to reach</param>
     public void SetDestination(Vector3 _position)
     {
-        currentPath.ClearPath();
         pathState = CalculatingState.Calculating;
-        Debug.Log(CustomNavMeshManager.Instance.CalculatePath(transform.position, _position, currentPath)); 
-        return; 
-        if (CustomNavMeshManager.Instance.CalculatePath(transform.position, _position, currentPath))
+        if (PathCalculator.CalculatePath(transform.position, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
             pathState = CalculatingState.Ready; 
     }
 
@@ -61,7 +58,6 @@ public class CustomNavMeshAgent : MonoBehaviour
         yield return new WaitForEndOfFrame();
         pathState = CalculatingState.Waiting;
         isMoving = false;
-        CurrentPath.ClearPath();
         OnDestinationReached?.Invoke(); 
         yield break;
     }
