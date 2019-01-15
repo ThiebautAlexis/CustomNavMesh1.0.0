@@ -21,8 +21,8 @@ Description:
 public class Triangle
 {
     #region Fields and properties
-    [SerializeField] CustomNavPoint[] vertices = new CustomNavPoint[3];
-    public CustomNavPoint[] Vertices { get { return vertices; } }
+    [SerializeField] Vertex[] vertices = new Vertex[3];
+    public Vertex[] Vertices { get { return vertices; } }
 
     /// Center is equal of the arithmetic center of the 3 points
     public Vector3 CenterPosition
@@ -60,11 +60,11 @@ public class Triangle
     #endregion
 
     #region Constructor
-    public Triangle(CustomNavPoint[] _navPoints)
+    public Triangle(Vertex[] _vertices)
     {
         for (int i = 0; i < 3; i++)
         {
-            vertices[i] =_navPoints[i];
+            vertices[i] =_vertices[i];
         }
     }
     #endregion

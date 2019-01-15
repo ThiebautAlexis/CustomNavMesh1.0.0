@@ -104,7 +104,7 @@ public class CustomNavMeshManager : MonoBehaviour
                     Gizmos.DrawLine(triangle.Vertices[i].Position, triangle.Vertices[0].Position);
                 }
             }
-            Gizmos.color = Color.red;
+            Gizmos.color = Color.blue;
             for (int i = 0; i < triangle.LinkedTriangles.Count; i++)
             {
                 Gizmos.DrawLine(triangle.CenterPosition, triangle.LinkedTriangles[i].CenterPosition);

@@ -80,11 +80,21 @@ public class CustomNavMeshAgent : MonoBehaviour
         Gizmos.color = Color.red; 
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
-            Gizmos.DrawSphere(currentPath.PathPoints[i], .5f); 
+            Gizmos.DrawSphere(currentPath.PathPoints[i], .2f); 
         }
         for (int i = 0; i < currentPath.PathPoints.Count - 1 ; i++)
         {
             Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]); 
+        }
+        Gizmos.color = Color.cyan;
+        for (int i = 0; i < currentPath.Left.Count; i++)
+        {
+            Gizmos.DrawSphere(currentPath.Left[i], .2f);
+        }
+        Gizmos.color = Color.black;
+        for (int i = 0; i < currentPath.Left.Count; i++)
+        {
+            Gizmos.DrawSphere(currentPath.Right[i], .2f);
         }
     }
     #endregion
