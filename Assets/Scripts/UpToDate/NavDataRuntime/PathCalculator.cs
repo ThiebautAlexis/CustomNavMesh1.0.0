@@ -146,6 +146,20 @@ public static class PathCalculator
         return false;
     }
 
+    static bool IsCrossingSide(Vector3 _origin, Vector3 _refPoint, Vector3 _firstPoint, Vector3 _secondPoint)
+    {
+        bool _isCrossing = false;
+        Vector3 _refDir = _refPoint - _origin;
+        Vector3 _firstDir = _firstPoint - _origin; 
+        Vector3 _secondDir = _secondPoint - _origin;
+        float _alpha = Vector3.SignedAngle(_refDir, _firstDir, Vector3.up);
+        float _beta = Vector3.SignedAngle(_refDir, _secondDir, Vector3.up);
+        if ((_alpha > 0 && _beta < 0) || (_alpha < 0 && _beta > 0))
+        {
+            _isCrossing = true;
+        }
+        return _isCrossing; 
+    }
     #endregion
 
     #region float 
@@ -247,7 +261,7 @@ public static class PathCalculator
     {
         Vector3 _ref = _end - _start;
         Vector3 _angle = _point - _start;
-        if (Vector3.Angle(_ref, _angle) > 0) return 1;
+        if (Vector3.SignedAngle(_ref, _angle, Vector3.up) > 0) return 1;
         return -1; 
     }
     #endregion 
@@ -365,7 +379,6 @@ public static class PathCalculator
         }
         
         //Step through the channel
-        /// BE CAREFUL HERE --> Il faut checker si les lignes se croisent pour poser un nouveau point
         Vector3 _currentVertex;
         Vector3 _nextVertex; 
         for (int i = 2; i <= _absoluteTrianglePath.Count - 1; i++)
@@ -380,9 +393,9 @@ public static class PathCalculator
                 if (Vector3.Distance(_rightVertices[_rightIndex], _nextVertex) < Vector3.Distance(_rightVertices[_rightIndex], _currentVertex))
                 {
                     //if next side cross the other side, place new apex
-                    if(true) // FIND HOW TO CHECK IF POINTS ARE ON DIFFERENT SIDES OF THE OTHER SIDE
+                    if(IsCrossingSide(_apex, _rightVertices[_rightIndex], _currentVertex, _nextVertex)) 
                     {
-                        Debug.Log("left i=>" + i);
+                        _simplifiedPath.Add(_rightVertices[_rightIndex]);
                         int _next = _rightIndex;
                         // Find next vertex.
                         for (int j = _next; j < _rightVertices.Length; j++)
@@ -393,7 +406,6 @@ public static class PathCalculator
                                 break;
                             }
                         }
-                        _simplifiedPath.Add(_rightVertices[_rightIndex]);
                         _apex = _rightVertices[_rightIndex];
                         _rightIndex = _next;
                     }
@@ -416,9 +428,9 @@ public static class PathCalculator
                 if (Vector3.Distance(_leftVertices[_leftIndex], _nextVertex) < Vector3.Distance(_leftVertices[_leftIndex], _currentVertex))
                 {
                     //if next side cross the other side, place new apex
-                    if(true) // FIND HOW TO CHECK IF POINTS ARE ON DIFFERENT SIDES OF THE OTHER SIDE
+                    if(IsCrossingSide(_apex, _leftVertices[_leftIndex], _currentVertex, _nextVertex)) 
                     {
-                        Debug.Log("right i=>" + i);
+                        _simplifiedPath.Add(_leftVertices[_leftIndex]);
                         int _next = _leftIndex;
                         // Find next vertex.
                         for (int j = _next; j < _leftVertices.Length; j++)
@@ -429,7 +441,6 @@ public static class PathCalculator
                                 break;
                             }
                         }
-                        _simplifiedPath.Add(_leftVertices[_leftIndex]);
                         _apex = _leftVertices[_leftIndex];
                         _leftIndex = _next;
                     }
@@ -441,7 +452,6 @@ public static class PathCalculator
                 }
             }
             
-      
         }
         _simplifiedPath.Add(_destination); 
         Debug.Log(_simplifiedPath.Count); 
