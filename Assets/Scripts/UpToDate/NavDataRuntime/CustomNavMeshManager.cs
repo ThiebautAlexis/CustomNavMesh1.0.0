@@ -54,14 +54,13 @@ public class CustomNavMeshManager : MonoBehaviour
     /// <param name="_mode">LoadMode</param>
     void LoadDatas(Scene _scene, LoadSceneMode _mode)
     {
-        CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
         string _sceneName = SceneManager.GetActiveScene().name;
         string _directoryName = CustomNavDataLoader.DirectoryPath;
+        CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
         CustomNavData _datas = _loader.LoadFile(_directoryName, _sceneName);
         triangles = _datas.TrianglesInfos;
     }
     #endregion
-
     #endregion
 
     #region Unity Methods

@@ -154,9 +154,9 @@ public static class PathCalculator
         Vector3 _secondDir = _secondPoint - _origin;
         float _alpha = Vector3.SignedAngle(_refDir, _firstDir, Vector3.up);
         float _beta = Vector3.SignedAngle(_refDir, _secondDir, Vector3.up);
-        if ((_alpha > 0 && _beta < 0) || (_alpha < 0 && _beta > 0))
+        if ((_alpha >= 0 && _beta <= 0) || (_alpha <= 0 && _beta >= 0))
         {
-            _isCrossing = true;
+            _isCrossing = true; 
         }
         return _isCrossing; 
     }
@@ -257,10 +257,11 @@ public static class PathCalculator
     #endregion
 
     #region int
-    static int GetSide(Vector3 _start, Vector3 _end, Vector3 _point)
+    static int GetSide(Vector3 _start, Vector3 _end, Vector3 _point, bool debug = false)
     {
         Vector3 _ref = _end - _start;
         Vector3 _angle = _point - _start;
+        if (debug) Debug.Log($"{_start} --> {_end} // {_point} = {Vector3.SignedAngle(_ref, _angle, Vector3.up)}"); 
         if (Vector3.SignedAngle(_ref, _angle, Vector3.up) > 0) return 1;
         return -1; 
     }
@@ -273,7 +274,7 @@ public static class PathCalculator
     /// <param name="_pathToBuild">Astar resources</param>
     static void BuildPath(Dictionary<Triangle, Triangle> _pathToBuild, CustomNavPath _path, Vector3 _origin, Vector3 _destination)
     {
-        
+        #region BuildingAbsolutePath
         // Building absolute path -> Link all triangle's CenterPosition together
         // Adding _origin and destination to the path
         Triangle _currentTriangle = _pathToBuild.Last().Key;
@@ -286,7 +287,7 @@ public static class PathCalculator
         _absoluteTrianglePath.Add(_currentTriangle);
         //Reverse the path to start at the origin 
         _absoluteTrianglePath.Reverse();
-        
+        #endregion
 
         //Create the simplifiedPath
         List<Vector3> _simplifiedPath = new List<Vector3>() { _origin };
@@ -315,6 +316,7 @@ public static class PathCalculator
         Vector3 _vertex1 = Vector3.zero;
         Vector3 _vertex2 = Vector3.zero;
 
+        #region Initialise Portal Vertices
         //Initialize portal vertices between each triangles
         for (int i = 0; i < _absoluteTrianglePath.Count - 1; i++)
         {
@@ -329,13 +331,14 @@ public static class PathCalculator
                 {
                     if (GetSide(_startLinePoint, _endLinePoint, _vertex1) > 0)
                     {
-                        _leftVertices[i + 1] = _vertex1;
-                        _rightVertices[i + 1] = _vertex2;
+                        _leftVertices[i + 1] = _vertex2;
+                        _rightVertices[i + 1] = _vertex1;
+
                     }
                     else
                     {
-                        _leftVertices[i + 1] = _vertex2;
-                        _rightVertices[i + 1] = _vertex1;
+                        _leftVertices[i + 1] = _vertex1;
+                        _rightVertices[i + 1] = _vertex2;
                     }
                     break;
                 }
@@ -354,13 +357,13 @@ public static class PathCalculator
             {
                 if (GetSide(_startLinePoint, _endLinePoint, _vertex1) > 0)
                 {
-                    _leftVertices[0] = _vertex1;
-                    _rightVertices[0] = _vertex2;
+                    _leftVertices[0] = _vertex2;
+                    _rightVertices[0] = _vertex1;
                 }
                 else
                 {
-                    _leftVertices[0] = _vertex2;
-                    _rightVertices[0] = _vertex1;
+                    _leftVertices[0] = _vertex1;
+                    _rightVertices[0] = _vertex2;
                 }
                 break;
             }
@@ -377,7 +380,8 @@ public static class PathCalculator
                 _rightVertices[_absoluteTrianglePath.Count] = _absoluteTrianglePath[_absoluteTrianglePath.Count - 1].Vertices[j].Position;
             }
         }
-        
+        #endregion
+
         //Step through the channel
         Vector3 _currentVertex;
         Vector3 _nextVertex; 
@@ -390,14 +394,17 @@ public static class PathCalculator
             if (_nextVertex != _currentVertex && i > _leftIndex)
             {
                 //If the next point does not widden funnel, update 
-                if (Vector3.Distance(_rightVertices[_rightIndex], _nextVertex) < Vector3.Distance(_rightVertices[_rightIndex], _currentVertex))
+                if (GetSide(_apex, _currentVertex, _nextVertex, true) > 0 )  //Check if interior curve is on left
                 {
                     //if next side cross the other side, place new apex
-                    if(IsCrossingSide(_apex, _rightVertices[_rightIndex], _currentVertex, _nextVertex)) 
+                    if (GetSide(_apex, _rightVertices[_rightIndex], _nextVertex) > 0)
                     {
-                        _simplifiedPath.Add(_rightVertices[_rightIndex]);
+                        // Set the new Apex
+                        _apex = _rightVertices[_rightIndex];
+                        _simplifiedPath.Add(_apex);
+
+                        // Find next right vertex.
                         int _next = _rightIndex;
-                        // Find next vertex.
                         for (int j = _next; j < _rightVertices.Length; j++)
                         {
                             if (_rightVertices[j] != _rightVertices[_next])
@@ -406,7 +413,6 @@ public static class PathCalculator
                                 break;
                             }
                         }
-                        _apex = _rightVertices[_rightIndex];
                         _rightIndex = _next;
                     }
                     // else skip to the next vertex
@@ -418,21 +424,23 @@ public static class PathCalculator
             }
 
             
-            // If the right vertex is different process
             _currentVertex = _rightVertices[_rightIndex];
             _nextVertex = _rightVertices[i];
-
+            // If the right vertex is different process
             if (_nextVertex != _currentVertex && i > _rightIndex)
             {
                 //If the next point does not widden funnel, update 
-                if (Vector3.Distance(_leftVertices[_leftIndex], _nextVertex) < Vector3.Distance(_leftVertices[_leftIndex], _currentVertex))
+                if (GetSide(_apex, _currentVertex, _nextVertex) < 0) // Check if interior curve is on right
                 {
                     //if next side cross the other side, place new apex
-                    if(IsCrossingSide(_apex, _leftVertices[_leftIndex], _currentVertex, _nextVertex)) 
+                    if (GetSide(_apex, _leftVertices[_leftIndex], _nextVertex) < 0)
                     {
-                        _simplifiedPath.Add(_leftVertices[_leftIndex]);
+                        //Set the new Apex
+                        _apex = _leftVertices[_leftIndex];
+                        _simplifiedPath.Add(_apex);
+
+                        // Find next Left Index.
                         int _next = _leftIndex;
-                        // Find next vertex.
                         for (int j = _next; j < _leftVertices.Length; j++)
                         {
                             if (_leftVertices[j] != _leftVertices[_next])
@@ -441,7 +449,6 @@ public static class PathCalculator
                                 break;
                             }
                         }
-                        _apex = _leftVertices[_leftIndex];
                         _leftIndex = _next;
                     }
                     //else skip to the next vertex
@@ -454,7 +461,6 @@ public static class PathCalculator
             
         }
         _simplifiedPath.Add(_destination); 
-        Debug.Log(_simplifiedPath.Count); 
         //Set the simplifiedPath
         _path.SetPath(_simplifiedPath, _leftVertices, _rightVertices);
     }

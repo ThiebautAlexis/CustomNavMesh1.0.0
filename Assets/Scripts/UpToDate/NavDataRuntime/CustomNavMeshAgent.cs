@@ -92,7 +92,7 @@ public class CustomNavMeshAgent : MonoBehaviour
             Gizmos.DrawSphere(currentPath.Left[i], .2f);
         }
         Gizmos.color = Color.black;
-        for (int i = 0; i < currentPath.Left.Count; i++)
+        for (int i = 0; i < currentPath.Right.Count; i++)
         {
             Gizmos.DrawSphere(currentPath.Right[i], .2f);
         }
