@@ -145,21 +145,6 @@ public static class PathCalculator
         }
         return false;
     }
-
-    static bool IsCrossingSide(Vector3 _origin, Vector3 _refPoint, Vector3 _firstPoint, Vector3 _secondPoint)
-    {
-        bool _isCrossing = false;
-        Vector3 _refDir = _refPoint - _origin;
-        Vector3 _firstDir = _firstPoint - _origin; 
-        Vector3 _secondDir = _secondPoint - _origin;
-        float _alpha = Vector3.SignedAngle(_refDir, _firstDir, Vector3.up);
-        float _beta = Vector3.SignedAngle(_refDir, _secondDir, Vector3.up);
-        if ((_alpha >= 0 && _beta <= 0) || (_alpha <= 0 && _beta >= 0))
-        {
-            _isCrossing = true; 
-        }
-        return _isCrossing; 
-    }
     #endregion
 
     #region float 
@@ -257,12 +242,22 @@ public static class PathCalculator
     #endregion
 
     #region int
-    static int GetSide(Vector3 _start, Vector3 _end, Vector3 _point, bool debug = false)
+    /// <summary>
+    /// Return the sign of the angle between [StartPoint EndPoint] and [StartPoint Point]
+    /// </summary>
+    /// <param name="_start">Start point</param>
+    /// <param name="_end">End Point</param>
+    /// <param name="_point">Point</param>
+    /// <param name="debug"></param>
+    /// <returns>Sign of the angle between the three points (if 0 or 180 or -180, return 0)</returns>
+    static int AngleSign(Vector3 _start, Vector3 _end, Vector3 _point, bool debug = false)
     {
         Vector3 _ref = _end - _start;
         Vector3 _angle = _point - _start;
-        if (debug) Debug.Log($"{_start} --> {_end} // {_point} = {Vector3.SignedAngle(_ref, _angle, Vector3.up)}"); 
-        if (Vector3.SignedAngle(_ref, _angle, Vector3.up) > 0) return 1;
+        if (debug) Debug.Log($"{_start} --> {_end} // {_point} = {Vector3.SignedAngle(_ref, _angle, Vector3.up)}");
+        float _alpha = Vector3.SignedAngle(_ref, _angle, Vector3.up);
+        if (_alpha == 0 || _alpha == 180 || _alpha == -180) return 0; 
+        if ( _alpha > 0) return 1;
         return -1; 
     }
     #endregion 
@@ -329,11 +324,10 @@ public static class PathCalculator
                 _vertex2 = _absoluteTrianglePath[i].Vertices[k].Position; ;
                 if (IsIntersecting(_startLinePoint, _endLinePoint, _vertex1, _vertex2))
                 {
-                    if (GetSide(_startLinePoint, _endLinePoint, _vertex1) > 0)
+                    if (AngleSign(_startLinePoint, _endLinePoint, _vertex1) > 0)
                     {
                         _leftVertices[i + 1] = _vertex2;
                         _rightVertices[i + 1] = _vertex1;
-
                     }
                     else
                     {
@@ -355,7 +349,7 @@ public static class PathCalculator
             _vertex2 = _absoluteTrianglePath[0].Vertices[k].Position; ;
             if (IsIntersecting(_startLinePoint, _endLinePoint, _vertex1, _vertex2))
             {
-                if (GetSide(_startLinePoint, _endLinePoint, _vertex1) > 0)
+                if (AngleSign(_startLinePoint, _endLinePoint, _vertex1) > 0)
                 {
                     _leftVertices[0] = _vertex2;
                     _rightVertices[0] = _vertex1;
@@ -384,36 +378,40 @@ public static class PathCalculator
 
         //Step through the channel
         Vector3 _currentVertex;
-        Vector3 _nextVertex; 
-        for (int i = 2; i <= _absoluteTrianglePath.Count - 1; i++)
+        Vector3 _nextVertex;
+
+        // PROBLEME: LES INDEX NE SONT PAS MIS CORRECTEMENT A JOUR
+        // LORSQU'ON POSE UN NOUVEL APEX, IL FAUT DIRE QUEL EST LE COTÉ INTERIEUR POUR COMMENCER PAR CE COTÉ 
+        for (int i = 2; i <= _absoluteTrianglePath.Count - 1; i++) 
         {
             _currentVertex = _leftVertices[_leftIndex];
             _nextVertex = _leftVertices[i];
-
             //If the new left vertex is different process
             if (_nextVertex != _currentVertex && i > _leftIndex)
             {
                 //If the next point does not widden funnel, update 
-                if (GetSide(_apex, _currentVertex, _nextVertex, true) > 0 )  //Check if interior curve is on left
+                if (AngleSign(_apex, _currentVertex, _nextVertex) >= 0)  
                 {
                     //if next side cross the other side, place new apex
-                    if (GetSide(_apex, _rightVertices[_rightIndex], _nextVertex) > 0)
+                    if (AngleSign(_apex, _rightVertices[_rightIndex], _nextVertex) > 0) 
                     {
                         // Set the new Apex
                         _apex = _rightVertices[_rightIndex];
                         _simplifiedPath.Add(_apex);
 
-                        // Find next right vertex.
-                        int _next = _rightIndex;
-                        for (int j = _next; j < _rightVertices.Length; j++)
+                        // Find new right vertex.
+                        for (int j = _rightIndex; j < _rightVertices.Length; j++)
                         {
-                            if (_rightVertices[j] != _rightVertices[_next])
+                            if (_rightVertices[j] != _apex)
                             {
-                                _next = j;
+                                _rightIndex = j;
                                 break;
                             }
                         }
-                        _rightIndex = _next;
+                        Debug.Log($"R Set apex on {_apex} -> RIGHT = {_rightVertices[_rightIndex]} LEFT = {_leftVertices[_leftIndex]}");
+                        // ATTENTION HERE BE CAREFUL 
+                        // MORE VERIFICATIONS
+                        if (_leftIndex < _rightIndex) _leftIndex = _rightIndex; 
                     }
                     // else skip to the next vertex
                     else
@@ -421,35 +419,40 @@ public static class PathCalculator
                         _leftIndex = i;
                     }
                 }
+                //else skip
             }
+            //else skip
 
-            
             _currentVertex = _rightVertices[_rightIndex];
             _nextVertex = _rightVertices[i];
+
             // If the right vertex is different process
             if (_nextVertex != _currentVertex && i > _rightIndex)
             {
                 //If the next point does not widden funnel, update 
-                if (GetSide(_apex, _currentVertex, _nextVertex) < 0) // Check if interior curve is on right
+                if (AngleSign(_apex, _currentVertex, _nextVertex) <= 0) 
                 {
                     //if next side cross the other side, place new apex
-                    if (GetSide(_apex, _leftVertices[_leftIndex], _nextVertex) < 0)
+                    if (AngleSign(_apex, _leftVertices[_leftIndex], _nextVertex) < 0) 
                     {
                         //Set the new Apex
                         _apex = _leftVertices[_leftIndex];
                         _simplifiedPath.Add(_apex);
 
                         // Find next Left Index.
-                        int _next = _leftIndex;
-                        for (int j = _next; j < _leftVertices.Length; j++)
+                        for (int j = _leftIndex; j < _leftVertices.Length; j++)
                         {
-                            if (_leftVertices[j] != _leftVertices[_next])
+                            if (_leftVertices[j] != _apex)
                             {
-                                _next = j;
+                                _leftIndex = j;
                                 break;
                             }
                         }
-                        _leftIndex = _next;
+                        Debug.Log($"L Set apex on {_apex} -> RIGHT = {_rightVertices[_rightIndex]} LEFT = {_leftVertices[_leftIndex]}");
+                        // ATTENTION HERE BE CAREFUL 
+                        // MORE VERIFICATIONS
+                        if (_rightIndex < _leftIndex ) _rightIndex =  _leftIndex;
+
                     }
                     //else skip to the next vertex
                     else
@@ -457,9 +460,12 @@ public static class PathCalculator
                         _rightIndex = i;
                     }
                 }
+                //else skip
             }
-            
+            //else skip
         }
+        
+
         _simplifiedPath.Add(_destination); 
         //Set the simplifiedPath
         _path.SetPath(_simplifiedPath, _leftVertices, _rightVertices);
