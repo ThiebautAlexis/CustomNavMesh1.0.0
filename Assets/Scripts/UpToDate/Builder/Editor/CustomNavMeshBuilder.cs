@@ -34,7 +34,7 @@ public class CustomNavMeshBuilder : EditorWindow
 
     private List<Vertex> navPoints = new List<Vertex>();
 
-    private string SavingDirectory { get { return Application.dataPath + "/Resources/CustomNavDatas"; } }
+    private string SavingDirectory { get { return Application.dataPath + "/CustomNavDatas"; } }
 
     #endregion
 
@@ -97,7 +97,7 @@ public class CustomNavMeshBuilder : EditorWindow
         List<int> _modifiedIndices = _tr.indices.ToList();
         if (_tr.vertices.Length == 0)
         {
-            Debug.Log("No Vertices found"); 
+            Debug.LogWarning("No Vertices found"); 
             return;
         }
         //GET ALL NAV POINTS
@@ -147,7 +147,6 @@ public class CustomNavMeshBuilder : EditorWindow
         foreach (Triangle t in triangles)
         {
             LinkTriangles(t);
-            Debug.Log(t.LinkedTriangles.Count); 
         }
         isBuilding = false;
         SaveDatas(); 
@@ -197,7 +196,7 @@ public class CustomNavMeshBuilder : EditorWindow
         CustomNavDataSaver<CustomNavData> _navDataSaver = new CustomNavDataSaver<CustomNavData>();
         CustomNavData _dataSaved = new CustomNavData();
         _dataSaved.TrianglesInfos = triangles;
-        _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved, ".txt");
+        _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved, ".bin");
     }
     #endregion
     #endregion

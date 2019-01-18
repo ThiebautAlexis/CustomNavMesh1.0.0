@@ -29,7 +29,9 @@ public class CustomNavMeshManager : MonoBehaviour
     public List<Triangle> Triangles { get { return triangles; }  }
 
     private bool isCalculating = false; 
-    public bool IsCalculating { get { return IsCalculating; } } 
+    public bool IsCalculating { get { return IsCalculating; } }
+
+    private string DirectoryPath { get { return Application.dataPath + "/CustomNavDatas"; } }
     #endregion
 
     #region Methods
@@ -42,8 +44,7 @@ public class CustomNavMeshManager : MonoBehaviour
     {
         CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
         string _sceneName = SceneManager.GetActiveScene().name;
-        string _directoryName = CustomNavDataLoader.DirectoryPath;
-        CustomNavData _datas = _loader.LoadFile(_directoryName, _sceneName);
+        CustomNavData _datas = _loader.LoadFile(DirectoryPath, _sceneName);
         triangles = _datas.TrianglesInfos;
     }
 
@@ -55,9 +56,8 @@ public class CustomNavMeshManager : MonoBehaviour
     void LoadDatas(Scene _scene, LoadSceneMode _mode)
     {
         string _sceneName = SceneManager.GetActiveScene().name;
-        string _directoryName = CustomNavDataLoader.DirectoryPath;
         CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
-        CustomNavData _datas = _loader.LoadFile(_directoryName, _sceneName);
+        CustomNavData _datas = _loader.LoadFile(DirectoryPath, _sceneName);
         triangles = _datas.TrianglesInfos;
     }
     #endregion

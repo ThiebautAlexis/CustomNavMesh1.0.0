@@ -20,12 +20,16 @@ Description:
 
 public static class PathCalculator 
 {
-
-    #region Fields/Properties
-    #endregion
-
     #region Methods
     #region bool
+    /// <summary>
+    /// Check if two segement intersect
+    /// </summary>
+    /// <param name="L1_start">start of the first segment</param>
+    /// <param name="L1_end">end of the first segment</param>
+    /// <param name="L2_start">start of the second segment</param>
+    /// <param name="L2_end">end of the second segment</param>
+    /// <returns>return true if segements intersect</returns>
     static bool IsIntersecting(Vector3 L1_start, Vector3 L1_end, Vector3 L2_start, Vector3 L2_end)
     {
         bool isIntersecting = false;
@@ -261,6 +265,7 @@ public static class PathCalculator
         return -1; 
     }
     #endregion 
+
     #region void 
     /// <summary>
     /// Build a path using Astar resources
@@ -291,7 +296,7 @@ public static class PathCalculator
         if (_absoluteTrianglePath.Count <= 1)
         {
             _simplifiedPath.Add(_destination);
-            _path.SetPath(_simplifiedPath, null, null);
+            _path.SetPath(_simplifiedPath);
             return;
         }
         //Simplify the path with Funnel Algorithm
@@ -380,9 +385,7 @@ public static class PathCalculator
         Vector3 _currentVertex;
         Vector3 _nextVertex;
 
-        // PROBLEME: LES INDEX NE SONT PAS MIS CORRECTEMENT A JOUR
-        // LORSQU'ON POSE UN NOUVEL APEX, IL FAUT DIRE QUEL EST LE COTÉ INTERIEUR POUR COMMENCER PAR CE COTÉ 
-        for (int i = 2; i <= _absoluteTrianglePath.Count - 1; i++) 
+        for (int i = 2; i < _leftVertices.Length || i < _rightVertices.Length ; i++) 
         {
             _currentVertex = _leftVertices[_leftIndex];
             _nextVertex = _leftVertices[i];
@@ -399,6 +402,7 @@ public static class PathCalculator
                         _apex = _rightVertices[_rightIndex];
                         _simplifiedPath.Add(_apex);
 
+
                         // Find new right vertex.
                         for (int j = _rightIndex; j < _rightVertices.Length; j++)
                         {
@@ -408,10 +412,7 @@ public static class PathCalculator
                                 break;
                             }
                         }
-                        Debug.Log($"R Set apex on {_apex} -> RIGHT = {_rightVertices[_rightIndex]} LEFT = {_leftVertices[_leftIndex]}");
-                        // ATTENTION HERE BE CAREFUL 
-                        // MORE VERIFICATIONS
-                        if (_leftIndex < _rightIndex) _leftIndex = _rightIndex; 
+                        i = _rightIndex;
                     }
                     // else skip to the next vertex
                     else
@@ -430,14 +431,15 @@ public static class PathCalculator
             if (_nextVertex != _currentVertex && i > _rightIndex)
             {
                 //If the next point does not widden funnel, update 
-                if (AngleSign(_apex, _currentVertex, _nextVertex) <= 0) 
+                if (AngleSign(_apex, _currentVertex, _nextVertex) <= 0)
                 {
                     //if next side cross the other side, place new apex
-                    if (AngleSign(_apex, _leftVertices[_leftIndex], _nextVertex) < 0) 
+                    if (AngleSign(_apex, _leftVertices[_leftIndex], _nextVertex) < 0)
                     {
                         //Set the new Apex
                         _apex = _leftVertices[_leftIndex];
                         _simplifiedPath.Add(_apex);
+
 
                         // Find next Left Index.
                         for (int j = _leftIndex; j < _leftVertices.Length; j++)
@@ -448,11 +450,6 @@ public static class PathCalculator
                                 break;
                             }
                         }
-                        Debug.Log($"L Set apex on {_apex} -> RIGHT = {_rightVertices[_rightIndex]} LEFT = {_leftVertices[_leftIndex]}");
-                        // ATTENTION HERE BE CAREFUL 
-                        // MORE VERIFICATIONS
-                        if (_rightIndex < _leftIndex ) _rightIndex =  _leftIndex;
-
                     }
                     //else skip to the next vertex
                     else
@@ -468,10 +465,9 @@ public static class PathCalculator
 
         _simplifiedPath.Add(_destination); 
         //Set the simplifiedPath
-        _path.SetPath(_simplifiedPath, _leftVertices, _rightVertices);
+        _path.SetPath(_simplifiedPath);
     }
     #endregion
 
     #endregion
-
 }

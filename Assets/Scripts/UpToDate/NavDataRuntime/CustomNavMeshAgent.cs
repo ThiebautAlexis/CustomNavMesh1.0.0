@@ -8,10 +8,12 @@ using UnityEngine;
 public class CustomNavMeshAgent : MonoBehaviour
 {
     #region Events
-    public event Action OnDestinationReached; 
+    public event Action OnDestinationReached;
     #endregion
 
     #region FieldsAndProperty
+    [SerializeField, Range(.5f,10)] float speed = 1; 
+
     [SerializeField] CustomNavPath currentPath;
     public CustomNavPath CurrentPath { get { return currentPath; } }
 
@@ -33,7 +35,10 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         pathState = CalculatingState.Calculating;
         if (PathCalculator.CalculatePath(transform.position, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
-            pathState = CalculatingState.Ready; 
+        {
+            pathState = CalculatingState.Ready;
+            StartCoroutine(FollowPath(speed)); 
+        }
     }
 
     /// <summary>
@@ -85,16 +90,6 @@ public class CustomNavMeshAgent : MonoBehaviour
         for (int i = 0; i < currentPath.PathPoints.Count - 1 ; i++)
         {
             Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]); 
-        }
-        Gizmos.color = Color.cyan;
-        for (int i = 0; i < currentPath.Left.Count; i++)
-        {
-            Gizmos.DrawSphere(currentPath.Left[i], .2f);
-        }
-        Gizmos.color = Color.black;
-        for (int i = 0; i < currentPath.Right.Count; i++)
-        {
-            Gizmos.DrawSphere(currentPath.Right[i], .2f);
         }
     }
     #endregion
