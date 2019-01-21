@@ -12,16 +12,33 @@ public class CustomNavMeshAgent : MonoBehaviour
     #endregion
 
     #region FieldsAndProperty
-    [SerializeField, Range(.5f,10)] float speed = 1; 
 
+    #region bool
+    bool isMoving = false;
+    public bool IsMoving { get { return isMoving; } }
+    #endregion
+
+    #region float
+    [SerializeField, Range(.1f, 5)] float height = 1;
+    [SerializeField, Range(-5, 5)] float offset = 0;
+    [SerializeField, Range(.5f, 10)] float speed = 1;
+
+    #endregion
+
+    #region Path
     [SerializeField] CustomNavPath currentPath;
     public CustomNavPath CurrentPath { get { return currentPath; } }
+    #endregion
 
+    #region CalculatingState
     CalculatingState pathState = CalculatingState.Waiting;
     public CalculatingState PathState { get { return pathState; } }
+    #endregion
 
-    bool isMoving = false; 
-    public bool IsMoving { get { return isMoving; } }
+    #region Vector3
+    public Vector3 OffsetSize { get { return new Vector3(transform.localScale.x, height, transform.localScale.z);  } }
+    public Vector3 OffsetPosition { get { return new Vector3(0, (height / 2) + offset, 0);  } }
+    #endregion 
 
     [SerializeField] Transform target; 
     #endregion
@@ -48,29 +65,29 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <returns></returns>
     public IEnumerator FollowPath(float _speed)
     {
-        isMoving = true; 
-        CustomNavPath _pathToFollow = CurrentPath;
+        isMoving = true;
+        List<Vector3> _pathToFollow = CurrentPath.PathPoints;
         int _index = 1;
-        while (Vector3.Distance(transform.position, _pathToFollow.PathPoints.Last()) > .5f)
+        while (Vector3.Distance(transform.position, _pathToFollow.Last()) > .5f)
         {
-            if (Vector3.Distance(transform.position, _pathToFollow.PathPoints[_index]) <= .5f)
+            if (Vector3.Distance(transform.position, _pathToFollow[_index]) <= .5f)
             {
                 _index = _index + 1;
             }
-            transform.position = Vector3.MoveTowards(transform.position, _pathToFollow.PathPoints[_index], Time.deltaTime * _speed);
+            transform.position = Vector3.MoveTowards(transform.position, _pathToFollow[_index] + OffsetPosition , Time.deltaTime * _speed);
             yield return new WaitForEndOfFrame();
         }
         yield return new WaitForEndOfFrame();
         pathState = CalculatingState.Waiting;
         isMoving = false;
         OnDestinationReached?.Invoke(); 
-        yield break;
     }
     #endregion
 
     #region UnityMethods
     private void Start()
     {
+
     }
 
     private void Update()
@@ -82,7 +99,10 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.red; 
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireCube(transform.position, OffsetSize); 
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(transform.position - OffsetPosition, .1f); 
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
             Gizmos.DrawSphere(currentPath.PathPoints[i], .2f); 

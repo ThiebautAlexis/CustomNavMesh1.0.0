@@ -80,10 +80,24 @@ public static class PathCalculator
     /// <returns>Return if the path can be calculated</returns>
     public static bool CalculatePath(Vector3 _origin, Vector3 _destination, CustomNavPath _path, List<Triangle> _trianglesDatas)
     {
+        RaycastHit _hit;
+        Vector3 _groundedOrigin;
+        Vector3 _groundedDestination; 
+        if (Physics.Raycast(new Ray(_origin, Vector3.down), out _hit))
+        {
+            _groundedOrigin = _hit.point;
+
+        }
+        else _groundedOrigin = _origin;
+        if (Physics.Raycast(new Ray(_destination, Vector3.down), out _hit))
+        {
+            _groundedDestination = _hit.point;
+        }
+        else _groundedDestination = _destination; 
         // GET TRIANGLES
         // Get the origin triangle and the destination triangle
-        Triangle _originTriangle = GetTriangleContainingPosition(_origin, _trianglesDatas);
-        Triangle _targetedTriangle = GetTriangleContainingPosition(_destination, _trianglesDatas);
+        Triangle _originTriangle = GetTriangleContainingPosition(_groundedOrigin, _trianglesDatas);
+        Triangle _targetedTriangle = GetTriangleContainingPosition(_groundedDestination, _trianglesDatas);
 
         //Open list that contains all heuristically calculated triangles 
         List<Triangle> _openList = new List<Triangle>();
@@ -94,7 +108,7 @@ public static class PathCalculator
 
         /* ASTAR: Algorithm*/
         // Add the origin point to the open and close List
-        //Set its heuristic cost and its selection state
+        // Set its heuristic cost and its selection state
         _openList.Add(_originTriangle);
         _originTriangle.HeuristicCostFromStart = 0;
         _originTriangle.HasBeenSelected = true;
@@ -114,9 +128,9 @@ public static class PathCalculator
                 //_cameFrom.Add(_targetedTriangle, _currentTriangle);
 
                 //Build the path
-                BuildPath(_cameFrom, _path, _origin, _destination);
+                BuildPath(_cameFrom, _path, _groundedOrigin, _groundedDestination);
                 //Clear all points selection state
-                foreach (Triangle t in _openList)
+                foreach (Triangle t in _trianglesDatas)
                 {
                     t.HasBeenSelected = false;
                 }
@@ -146,6 +160,10 @@ public static class PathCalculator
                     }
                 }
             }
+        }
+        foreach (Triangle t in _trianglesDatas)
+        {
+            t.HasBeenSelected = false;
         }
         return false;
     }
@@ -461,9 +479,8 @@ public static class PathCalculator
             }
             //else skip
         }
-        
 
-        _simplifiedPath.Add(_destination); 
+        _simplifiedPath.Add(_destination);
         //Set the simplifiedPath
         _path.SetPath(_simplifiedPath);
     }

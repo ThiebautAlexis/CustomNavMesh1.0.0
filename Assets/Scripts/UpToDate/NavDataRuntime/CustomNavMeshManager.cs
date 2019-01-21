@@ -28,9 +28,6 @@ public class CustomNavMeshManager : MonoBehaviour
     [SerializeField] List<Triangle> triangles = new List<Triangle>();
     public List<Triangle> Triangles { get { return triangles; }  }
 
-    private bool isCalculating = false; 
-    public bool IsCalculating { get { return IsCalculating; } }
-
     private string DirectoryPath { get { return Application.dataPath + "/CustomNavDatas"; } }
     #endregion
 
