@@ -20,9 +20,10 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     #region float
     [SerializeField, Range(.1f, 5)] float height = 1;
+    [SerializeField, Range(.5f, 2)] float radius = 1;
     [SerializeField, Range(-5, 5)] float offset = 0;
     [SerializeField, Range(.5f, 10)] float speed = 1;
-
+    [SerializeField, Range(1, 15)] float detectionRange = 5; 
     #endregion
 
     #region Path
@@ -36,7 +37,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     #endregion
 
     #region Vector3
-    public Vector3 OffsetSize { get { return new Vector3(transform.localScale.x, height, transform.localScale.z);  } }
+    public Vector3 OffsetSize { get { return new Vector3(radius, height, radius);  } }
     public Vector3 OffsetPosition { get { return new Vector3(0, (height / 2) + offset, 0);  } }
     #endregion 
 
@@ -67,14 +68,41 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         isMoving = true;
         List<Vector3> _pathToFollow = CurrentPath.PathPoints;
-        int _index = 1;
-        while (Vector3.Distance(transform.position, _pathToFollow.Last()) > .5f)
+        RaycastHit _hit;
+        /* STEERING 
+        Vector3 _desiredVelocity = Vector3.Normalize(_pathToFollow.First() - transform.position) * speed;
+        Vector3 _currentVelocity = Vector3.Normalize(transform.forward) * speed;
+        Vector3 _seek = Vector3.zero;
+        Vector3 _avoidanceForce = Vector3.zero;
+        Vector3 _steering = Vector3.zero; 
+        */
+
+        while (Vector3.Distance(transform.position - OffsetPosition, _pathToFollow.Last()) > .5f)
         {
-            if (Vector3.Distance(transform.position, _pathToFollow[_index]) <= .5f)
+            /* STEERING
+            _hit = default(RaycastHit);
+            _avoidanceForce = Vector3.zero;
+            */
+
+            if (Vector3.Distance(transform.position - OffsetPosition, _pathToFollow.First()) <= .5f)
             {
-                _index = _index + 1;
+                _pathToFollow.RemoveAt(0); 
+                //_desiredVelocity = Vector3.Normalize(_pathToFollow.First() - transform.position) * speed;
+                continue; 
             }
-            transform.position = Vector3.MoveTowards(transform.position, _pathToFollow[_index] + OffsetPosition , Time.deltaTime * _speed);
+
+            /*STEERING
+            _currentVelocity = Vector3.Normalize(transform.forward) * speed;
+            _seek = _desiredVelocity - _currentVelocity; 
+            //if(Physics.Raycast(new Ray(transform.position, transform.forward), out _hit, detectionRange) && _hit.collider.GetComponent<CustomNavMeshAgent>())
+            //{
+            //    _avoidanceForce = _hit.point - _hit.transform.position; 
+            //}
+            _steering = _seek + _avoidanceForce; 
+            transform.position = Vector3.MoveTowards(transform.position, transform.position + _steering + OffsetPosition , Time.deltaTime * _speed);
+            //transform.eulerAngles = Vector3.Lerp(transform.eulerAngles, _steering + OffsetPosition, Time.deltaTime * _speed);
+            */
+            transform.position = Vector3.MoveTowards(transform.position, _pathToFollow.First() + OffsetPosition, Time.deltaTime * speed); 
             yield return new WaitForEndOfFrame();
         }
         yield return new WaitForEndOfFrame();
@@ -102,11 +130,13 @@ public class CustomNavMeshAgent : MonoBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawWireCube(transform.position, OffsetSize); 
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(transform.position - OffsetPosition, .1f); 
+        Gizmos.DrawSphere(transform.position - OffsetPosition, .1f);
+        if (currentPath.PathPoints.Count == 0) return; 
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
             Gizmos.DrawSphere(currentPath.PathPoints[i], .2f); 
         }
+        Gizmos.DrawLine(transform.position - OffsetPosition, currentPath.PathPoints.First());
         for (int i = 0; i < currentPath.PathPoints.Count - 1 ; i++)
         {
             Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]); 

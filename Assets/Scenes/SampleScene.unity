@@ -468,6 +468,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   height: 1
+  radius: 1.5
   offset: 0
   speed: 5
   currentPath:
@@ -2584,6 +2585,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   height: 1
+  radius: 1
   offset: 0
   speed: 5
   currentPath:
