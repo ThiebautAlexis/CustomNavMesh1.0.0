@@ -131,7 +131,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(transform.position - OffsetPosition, .1f);
-        if (currentPath.PathPoints.Count == 0) return; 
+        if (currentPath.PathPoints == null || currentPath.PathPoints.Count == 0) return; 
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
             Gizmos.DrawSphere(currentPath.PathPoints[i], .2f); 
