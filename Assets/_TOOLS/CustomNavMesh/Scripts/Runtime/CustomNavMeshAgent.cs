@@ -19,20 +19,27 @@ public class CustomNavMeshAgent : MonoBehaviour
     #endregion
 
     #region float
+    [Header("Agent Settings")]
     [SerializeField, Range(.1f, 5)] float height = 1;
+    public float Height { get { return height/2;  } }
+
     [SerializeField, Range(.5f, 2)] float radius = 1;
+    public float Radius { get { return radius*.75f;  } }
+
     [SerializeField, Range(-5, 5)] float offset = 0;
+
     [SerializeField, Range(.5f, 10)] float speed = 1;
+
     [SerializeField, Range(1, 15)] float detectionRange = 5; 
     #endregion
 
     #region Path
-    [SerializeField] CustomNavPath currentPath;
+    private CustomNavPath currentPath;
     public CustomNavPath CurrentPath { get { return currentPath; } }
     #endregion
 
     #region CalculatingState
-    CalculatingState pathState = CalculatingState.Waiting;
+    private CalculatingState pathState = CalculatingState.Waiting;
     public CalculatingState PathState { get { return pathState; } }
     #endregion
 
@@ -40,8 +47,6 @@ public class CustomNavMeshAgent : MonoBehaviour
     public Vector3 OffsetSize { get { return new Vector3(radius, height, radius);  } }
     public Vector3 OffsetPosition { get { return new Vector3(0, (height / 2) + offset, 0);  } }
     #endregion 
-
-    [SerializeField] Transform target; 
     #endregion
 
     #region Methods
@@ -120,15 +125,10 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Mouse0))
-            SetDestination(target.position);
-
     }
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(transform.position, OffsetSize); 
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(transform.position - OffsetPosition, .1f);
         if (currentPath.PathPoints.Count == 0) return; 

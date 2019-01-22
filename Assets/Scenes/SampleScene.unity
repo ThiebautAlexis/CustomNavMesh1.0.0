@@ -468,12 +468,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   height: 1
-  radius: 1.5
+  radius: 1.1
   offset: 0
   speed: 5
-  currentPath:
-    pathPoints: []
-  target: {fileID: 1259654141}
+  detectionRange: 5
 --- !u!65 &172423571
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2588,9 +2586,7 @@ MonoBehaviour:
   radius: 1
   offset: 0
   speed: 5
-  currentPath:
-    pathPoints: []
-  target: {fileID: 1259654141}
+  detectionRange: 5
 --- !u!65 &1888189954
 BoxCollider:
   m_ObjectHideFlags: 0
