@@ -55,7 +55,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         if (PathCalculator.CalculatePath(transform.position, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
         {
             pathState = CalculatingState.Ready;
-            StartCoroutine(FollowPath(speed)); 
+            StartCoroutine(FollowPath()); 
         }
     }
 
@@ -64,7 +64,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// </summary>
     /// <param name="_speed">speed</param>
     /// <returns></returns>
-    public IEnumerator FollowPath(float _speed)
+    public IEnumerator FollowPath()
     {
         isMoving = true;
         List<Vector3> _pathToFollow = CurrentPath.PathPoints;
