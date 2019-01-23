@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random; 
 
 /*
 [Script Header] TDS_Triangle Version 0.0.1
@@ -20,8 +21,8 @@ Description:
 public class Triangle
 {
     #region Fields and properties
-    [SerializeField] CustomNavPoint[] vertices = new CustomNavPoint[3];
-    public CustomNavPoint[] Vertices { get { return vertices; } }
+    [SerializeField] Vertex[] vertices = new Vertex[3];
+    public Vertex[] Vertices { get { return vertices; } }
 
     /// Center is equal of the arithmetic center of the 3 points
     public Vector3 CenterPosition
@@ -32,35 +33,43 @@ public class Triangle
         }
     }
 
-    /*  [OLD]
-    [SerializeField] List<int> middleSegmentIndex = new List<int>();
-    public List<int> MiddleSegmentIndex { get { return middleSegmentIndex; } }
-    */
-
     [SerializeField] List<Triangle> linkedTriangles = new List<Triangle>(); 
     public List<Triangle> LinkedTriangles { get { return linkedTriangles; } }
 
-    public bool HasBeenLinked = false; 
-    
+    public bool HasBeenLinked = false;
+
+    public bool HasBeenSelected { get; set; }
+
+    private float heuristicPriority;
+    public float HeuristicPriority
+    {
+        get
+        {
+            return heuristicPriority = HeuristicCostFromStart + HeuristicCostToDestination;
+        }
+        set
+        {
+            heuristicPriority = value;
+            HeuristicCostToDestination = heuristicPriority - HeuristicCostFromStart;
+        }
+    }
+
+    public float HeuristicCostFromStart { get; set; }
+    public float HeuristicCostToDestination { get; set; }
+
     #endregion
 
     #region Constructor
-    public Triangle(CustomNavPoint[] _navPoints)
+    public Triangle(Vertex[] _vertices)
     {
         for (int i = 0; i < 3; i++)
         {
-            vertices[i] =_navPoints[i];
+            vertices[i] =_vertices[i];
         }
     }
     #endregion
 
     #region Methods
-    void CheckEdges()
-    {
-        if (!HasBeenLinked) return;
-        //CHECK EVERY TRIANGLE 
-        //SI UNE PAIRE DE POINTS N'APPARTIENT PAS A DEUX TRIANGLE EN MÊME TEMPS, ALORS CETTE PAIRE DE POINTS CORRESPOND A L'EDGE D'UN OBSTACLE  
-    }
     #endregion
 }
 

@@ -32,9 +32,9 @@ public class CustomNavMeshBuilder : EditorWindow
 
     private List<Triangle> triangles = new List<Triangle>();
 
-    private List<CustomNavPoint> navPoints = new List<CustomNavPoint>();
+    private List<Vertex> navPoints = new List<Vertex>();
 
-    private string SavingDirectory { get { return Application.dataPath + "/Resources/CustomNavDatas"; } }
+    private string SavingDirectory { get { return Application.dataPath + "/CustomNavDatas"; } }
 
     #endregion
 
@@ -54,9 +54,9 @@ public class CustomNavMeshBuilder : EditorWindow
     /// <param name="_triangle1">First triangle to compare</param>
     /// <param name="_triangle2">Second triangle to compare</param>
     /// <returns>If the triangles have more than 1 vertex.ices in common</returns>
-    CustomNavPoint[] GetVerticesInCommon(Triangle _triangle1, Triangle _triangle2)
+    Vertex[] GetVerticesInCommon(Triangle _triangle1, Triangle _triangle2)
     {
-        List<CustomNavPoint> _vertices = new List<CustomNavPoint>();
+        List<Vertex> _vertices = new List<Vertex>();
         for (int i = 0; i < _triangle1.Vertices.Length; i++)
         {
             for (int j = 0; j < _triangle2.Vertices.Length; j++)
@@ -97,7 +97,7 @@ public class CustomNavMeshBuilder : EditorWindow
         List<int> _modifiedIndices = _tr.indices.ToList();
         if (_tr.vertices.Length == 0)
         {
-            Debug.Log("No Vertices found"); 
+            Debug.LogWarning("No Vertices found"); 
             return;
         }
         //GET ALL NAV POINTS
@@ -110,7 +110,7 @@ public class CustomNavMeshBuilder : EditorWindow
             if (navPoints.Any(p => p.Position == _pos))
             {
                 ////GET THE SAME POINT
-                CustomNavPoint _existingPoint = navPoints.Where(p => p.Position == _pos).First();
+                Vertex _existingPoint = navPoints.Where(p => p.Position == _pos).First();
                 //// ORDER THE INDEX 
                 for (int j = 0; j < _modifiedIndices.Count; j++)
                 {
@@ -129,24 +129,24 @@ public class CustomNavMeshBuilder : EditorWindow
             // IF THE NAV POINT DOESN'T EXISTS ADD IT TO THE DICO
             else
             {
-                navPoints.Add(new CustomNavPoint(_pos, navPoints.Count));
+                navPoints.Add(new Vertex(_pos, navPoints.Count));
                 _previousIndex++;
             }
         }
         //GET ALL TRIANGLES
         for (int i = 0; i < _modifiedIndices.Count; i += 3)
         {
-            CustomNavPoint _first = navPoints.Where(p => p.ID == _modifiedIndices[i]).FirstOrDefault();
-            CustomNavPoint _second = navPoints.Where(p => p.ID == _modifiedIndices[i+1]).FirstOrDefault();
-            CustomNavPoint _third = navPoints.Where(p => p.ID == _modifiedIndices[i+2]).FirstOrDefault();
+            Vertex _first = navPoints.Where(p => p.ID == _modifiedIndices[i]).FirstOrDefault();
+            Vertex _second = navPoints.Where(p => p.ID == _modifiedIndices[i+1]).FirstOrDefault();
+            Vertex _third = navPoints.Where(p => p.ID == _modifiedIndices[i+2]).FirstOrDefault();
 
-            CustomNavPoint[] _pointsIndex = new CustomNavPoint[3] {_first, _second, _third };
+            Vertex[] _pointsIndex = new Vertex[3] {_first, _second, _third };
             Triangle _triangle = new Triangle(_pointsIndex);
             triangles.Add(_triangle);
         }
         foreach (Triangle t in triangles)
         {
-            LinkTriangles(t); 
+            LinkTriangles(t);
         }
         isBuilding = false;
         SaveDatas(); 
@@ -161,12 +161,12 @@ public class CustomNavMeshBuilder : EditorWindow
         for (int i = 0; i < triangles.Count; i++)
         {
             // IF TRIANGLES ARE THE SAME, DON'T COMPARE THEM
-            if (triangles[i] != _triangle && !triangles[i].HasBeenLinked)
+            if (triangles[i] != _triangle /*&& !triangles[i].HasBeenLinked*/)
             {
                 // GET THE VERTICES IN COMMON
-                CustomNavPoint[] _verticesInCommon = GetVerticesInCommon(_triangle, triangles[i]);
+                Vertex[] _verticesInCommon = GetVerticesInCommon(_triangle, triangles[i]);
                 // CHECK IF THERE IS THE RIGHT AMMOUNT OF VERTICES IN COMMON
-                if (_verticesInCommon.Length > 0)
+                if (_verticesInCommon.Length == 2)
                 {
                     _triangle.LinkedTriangles.Add(triangles[i]);
                 }
@@ -196,7 +196,7 @@ public class CustomNavMeshBuilder : EditorWindow
         CustomNavDataSaver<CustomNavData> _navDataSaver = new CustomNavDataSaver<CustomNavData>();
         CustomNavData _dataSaved = new CustomNavData();
         _dataSaved.TrianglesInfos = triangles;
-        _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved, ".txt");
+        _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved, ".bin");
     }
     #endregion
     #endregion

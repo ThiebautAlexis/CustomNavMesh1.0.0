@@ -15,7 +15,7 @@ public class CustomNavDataSaver<T>
         Stream _toSave = new FileStream(Path.Combine(_path, _name), FileMode.OpenOrCreate, FileAccess.ReadWrite);
         _format.Serialize(_toSave, _object);
         _toSave.Close();
-        CustomNavDataLoader.MigrateNavDatas();
+        Debug.Log($"{_name} successfully created in {_path}");
     }
 
     public void SaveFile(string _path, string _objectName, T _object, string _extension)
@@ -25,7 +25,7 @@ public class CustomNavDataSaver<T>
         Stream _toSave = new FileStream(Path.Combine(_path, _name), FileMode.OpenOrCreate, FileAccess.ReadWrite);
         _format.Serialize(_toSave, _object);
         _toSave.Close();
-        CustomNavDataLoader.MigrateNavDatas(); 
+        Debug.Log($"{_name} successfully created in {_path}");
     }
 
     public T LoadFile(string _path, string _sceneName)
