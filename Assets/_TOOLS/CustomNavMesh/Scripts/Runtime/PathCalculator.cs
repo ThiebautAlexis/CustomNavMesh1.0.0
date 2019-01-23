@@ -400,24 +400,30 @@ public static class PathCalculator
         #endregion
 
         //Step through the channel
-        Vector3 _currentVertex;
-        Vector3 _nextVertex;
+        Vector3 _currentLeftVertex;
+        Vector3 _nextLeftVertex;
+        Vector3 _currentRightVertex;
+        Vector3 _nextRightVertex;
 
         for (int i = 2; i < _leftVertices.Length || i < _rightVertices.Length ; i++) 
         {
-            _currentVertex = _leftVertices[_leftIndex];
-            _nextVertex = _leftVertices[i];
+            _currentLeftVertex = _leftVertices[_leftIndex];
+            _nextLeftVertex = _leftVertices[i];
+
+            _currentRightVertex = _rightVertices[_rightIndex];
+            _nextRightVertex = _rightVertices[i];
+
             //If the new left vertex is different process
-            if (_nextVertex != _currentVertex && i > _leftIndex)
+            if (_nextLeftVertex != _currentLeftVertex && i > _leftIndex)
             {
                 //If the next point does not widden funnel, update 
-                if (AngleSign(_apex, _currentVertex, _nextVertex) >= 0)  
+                if (AngleSign(_apex, _currentLeftVertex, _nextLeftVertex) >= 0)  
                 {
                     //if next side cross the other side, place new apex
-                    if (AngleSign(_apex, _rightVertices[_rightIndex], _nextVertex) > 0) 
+                    if (AngleSign(_apex, _currentRightVertex, _nextLeftVertex) > 0) 
                     {
                         // Set the new Apex
-                        _apex = _rightVertices[_rightIndex];
+                        _apex = _currentRightVertex;
                         _simplifiedPath.Add(_apex);
 
 
@@ -430,7 +436,6 @@ public static class PathCalculator
                                 break;
                             }
                         }
-                        i = _rightIndex;
                     }
                     // else skip to the next vertex
                     else
@@ -442,23 +447,19 @@ public static class PathCalculator
             }
             //else skip
 
-            _currentVertex = _rightVertices[_rightIndex];
-            _nextVertex = _rightVertices[i];
 
             // If the right vertex is different process
-            if (_nextVertex != _currentVertex && i > _rightIndex)
+            if (_nextRightVertex != _currentRightVertex && i > _rightIndex)
             {
                 //If the next point does not widden funnel, update 
-                if (AngleSign(_apex, _currentVertex, _nextVertex) <= 0)
+                if (AngleSign(_apex, _currentRightVertex, _nextRightVertex) <= 0)
                 {
                     //if next side cross the other side, place new apex
-                    if (AngleSign(_apex, _leftVertices[_leftIndex], _nextVertex) < 0)
+                    if (AngleSign(_apex, _currentLeftVertex, _nextRightVertex) < 0)
                     {
                         //Set the new Apex
-                        _apex = _leftVertices[_leftIndex];
+                        _apex = _currentLeftVertex;
                         _simplifiedPath.Add(_apex);
-
-
                         // Find next Left Index.
                         for (int j = _leftIndex; j < _leftVertices.Length; j++)
                         {

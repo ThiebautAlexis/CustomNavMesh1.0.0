@@ -50,6 +50,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     public Vector3 LastPosition { get { return currentPath.PathPoints.Last() + OffsetPosition; } }
     public Vector3 TargetedPosition { get { return currentPath.PathPoints.First() + OffsetPosition; } }
     #endregion 
+    [SerializeField] Transform target; 
     #endregion
 
     #region Methods
@@ -144,6 +145,7 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKey(KeyCode.Mouse0)) SetDestination(target.position); 
     }
 
     private void OnDrawGizmos()
