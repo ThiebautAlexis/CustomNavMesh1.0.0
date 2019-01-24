@@ -70,6 +70,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     public Vector3 LastPosition { get { return currentPath.PathPoints.Last() + OffsetPosition; } }
     public Vector3 TargetedPosition { get { return currentPath.PathPoints.First() + OffsetPosition; } }
     #endregion 
+    [SerializeField] Transform target; 
     #endregion
 
     #region Methods
