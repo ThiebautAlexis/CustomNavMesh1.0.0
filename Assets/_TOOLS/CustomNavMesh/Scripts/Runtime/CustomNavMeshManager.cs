@@ -11,14 +11,18 @@ using Random = UnityEngine.Random;
 [Script Header] TDS_NavMeshManager Version 0.0.1
 Created by: Alexis Thiébaut
 Date: 21/11/2018
-Description: 
+Description: Manager of the navdatas
+             - Load datas for the current scene
+             - Contains all datas of the scene stocked in a list of triangles 
 
 ///
 [UPDATES]
-Update n°:
-Updated by:
-Date:
-Description:
+Update n°: 001 
+Updated by: Thiebaut Alexis
+Date: 21/11/2018
+Description: Initialisation of the manager
+             - Create the list of triangles 
+             - Create the loading datas method to get the informations
 */
 public class CustomNavMeshManager : MonoBehaviour
 {
@@ -32,7 +36,6 @@ public class CustomNavMeshManager : MonoBehaviour
     #endregion
 
     #region Methods
-
     #region void
     /// <summary>
     /// Get the datas from the dataPath folder to get the navpoints and the triangles

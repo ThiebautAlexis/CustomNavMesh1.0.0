@@ -2,7 +2,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor; 
+using UnityEditor;
+
+/*
+[Script Header] CustomNavMeshAgentEditor Version 0.0.1
+Created by: Thiebaut Alexis 
+Date: 21/01/2019
+Description: Editor of the Agent
+             - Show visual debug
+
+///
+[UPDATES]
+Update n°: 001
+Updated by: Thiebaut Alexis
+Date: 14/01/2019
+Description: - Creating the method DrawWireCylinder that can draw the height and the radius of the agent
+             - Call the method in OnSceneGUI() method 
+*/
 
 [CustomEditor(typeof(CustomNavMeshAgent))]
 public class CustomNavMeshAgentEditor : Editor 

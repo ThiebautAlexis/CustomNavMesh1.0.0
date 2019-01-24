@@ -7,7 +7,7 @@ using UnityEngine.AI;
 using UnityEditor.SceneManagement;
 using UnityEditor;
 using UtilsLibrary.GUILibrary;
-using Debug = UnityEngine.Debug; 
+using Debug = UnityEngine.Debug;
 
 /*
 [Script Header] CustomNavMeshBuilder Version 0.0.1
@@ -22,6 +22,11 @@ Update n°: 00
 Updated by: Alexis Thiébaut
 Date: 20/12/2018
 Description: Set the base of the CustomNavMeshBuilder
+
+Update n°: 01 
+Updated by: Alexis Thiébaut
+Date: 
+Description: Create a version of the builder in editor to remove an object of the scene
 */
 
 public class CustomNavMeshBuilder : EditorWindow 

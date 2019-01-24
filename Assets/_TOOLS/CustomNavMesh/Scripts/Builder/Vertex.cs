@@ -7,14 +7,14 @@ using UnityEngine;
 [Script Header] TDS_NavPoint Version 0.0.1
 Created by: Alexis Thiébaut
 Date: 21/11/2018
-Description: 
+Description: Point of a polygone with an ID
 
 ///
 [UPDATES]
-Update n°:
-Updated by:
-Date:
-Description:
+Update n°: 001
+Updated by: Thiebaut Alexis
+Date: 21/11/2018
+Description: - Creation of the object 
 */
 [Serializable]
 public class Vertex

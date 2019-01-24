@@ -5,6 +5,26 @@ using System.Linq;
 using UnityEngine;
 
 
+/*
+[Script Header] CustomNavMeshAgent Version 0.0.1
+Created by: Thiebaut Alexis 
+Date: 14/01/2019
+Description: - Agent of the customNavMesh, they can Follow a path stocked in their CustomNavPath
+             - They can check if their path can be compute before following a path
+             - They have an offset and a size that allow them to be on the navmesh
+
+///
+[UPDATES]
+Update n°: 001
+Updated by: Thiebaut Alexis 
+Date: 14/01/2019
+Description: Rebasing the agent on a previously created agent
+
+Update n°: 002
+Updated By Thiebaut Alexis
+Date: 21/01/2019
+Description: Try to add steering to the agent
+*/
 public class CustomNavMeshAgent : MonoBehaviour
 {
     #region Events

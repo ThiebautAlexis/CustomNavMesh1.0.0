@@ -8,14 +8,18 @@ using Random = UnityEngine.Random;
 [Script Header] TDS_Triangle Version 0.0.1
 Created by: Alexis Thiébaut
 Date: 21/11/2018
-Description: 
+Description: Triangle represented by 3 Vertices 
+             Linked with another triangles 
+             Use the struct Barycentric to check if a point in inside the triangle
 
 ///
 [UPDATES]
-Update n°:
-Updated by:
-Date:
-Description:
+Update n°: 001
+Updated by: Thiebaut Alexis
+Date: 21/11/2018
+Description: Initialisation of the class
+             - Initialisation of the vertices, the center position, and the constructor
+             - Giving an heuristic priority
 */
 [Serializable]
 public class Triangle
