@@ -26,6 +26,11 @@ Updated by: Thiebaut Alexis
 Date: 14/01/2019
 Description: Implementation of the funnel algorithm
 
+Update n°: 003
+Updated by: Thiebaut Alexis
+Date: 24/01/2019
+Description: Completing the funnel algorithm. Now the path is completly smoothed
+
 */
 
 public static class PathCalculator 
