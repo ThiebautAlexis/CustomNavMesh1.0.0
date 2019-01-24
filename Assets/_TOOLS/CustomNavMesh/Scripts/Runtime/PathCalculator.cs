@@ -405,7 +405,7 @@ public static class PathCalculator
         Vector3 _currentRightVertex;
         Vector3 _nextRightVertex;
 
-        for (int i = 2; i < _leftVertices.Length || i < _rightVertices.Length ; i++) 
+        for (int i = 2; i < _absoluteTrianglePath.Count + 1 ; i++) 
         {
             _currentLeftVertex = _leftVertices[_leftIndex];
             _nextLeftVertex = _leftVertices[i];
@@ -425,7 +425,8 @@ public static class PathCalculator
                         // Set the new Apex
                         _apex = _currentRightVertex;
                         _simplifiedPath.Add(_apex);
-
+                        //Set i to the apex index to be at the good index on the next loop 
+                        i = _rightIndex; 
 
                         // Find new right vertex.
                         for (int j = _rightIndex; j < _rightVertices.Length; j++)
@@ -460,6 +461,9 @@ public static class PathCalculator
                         //Set the new Apex
                         _apex = _currentLeftVertex;
                         _simplifiedPath.Add(_apex);
+                        //Set i to the apex index to be at the good index on the next loop 
+                        i = _leftIndex;
+
                         // Find next Left Index.
                         for (int j = _leftIndex; j < _leftVertices.Length; j++)
                         {

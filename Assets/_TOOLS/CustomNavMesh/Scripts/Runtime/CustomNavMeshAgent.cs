@@ -145,7 +145,6 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKey(KeyCode.Mouse0)) SetDestination(target.position); 
     }
 
     private void OnDrawGizmos()
