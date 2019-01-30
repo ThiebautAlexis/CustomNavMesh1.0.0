@@ -428,8 +428,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   height: 1
   radius: 0.5
-  offset: -0.1
-  maxSpeed: 2
+  offset: 0
+  maxSpeed: 1
+  detectionRange: 2
+  steerForce: 1
   currentPath:
     pathPoints: []
   velocity: {x: 0, y: 0, z: 0}
@@ -494,7 +496,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1080680666}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.8, y: 0.5, z: -3.72}
+  m_LocalPosition: {x: -1.73, y: 0.5, z: 1.72}
   m_LocalScale: {x: 0.5, y: 1, z: 0.5}
   m_Children: []
   m_Father: {fileID: 0}
@@ -577,7 +579,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1952872619
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -591,8 +593,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   height: 1
   radius: 0.5
-  offset: -0.1
+  offset: 0
   maxSpeed: 1.5
+  detectionRange: 2
+  steerForce: 1
   currentPath:
     pathPoints: []
   velocity: {x: 0, y: 0, z: 0}
@@ -657,7 +661,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1952872618}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.4, y: 0.5, z: -3.47}
+  m_LocalPosition: {x: -2.95, y: 0.5, z: 2.78}
   m_LocalScale: {x: 0.5, y: 1, z: 0.5}
   m_Children: []
   m_Father: {fileID: 0}

@@ -80,7 +80,6 @@ public class CustomNavMeshAgent : MonoBehaviour
     public Vector3 OffsetPosition { get { return new Vector3(0, (height / 2) + offset, 0); } }
 
     public Vector3 LastPosition { get { return currentPath.PathPoints.Last() + OffsetPosition; } }
-    public Vector3 TargetedPosition { get { return currentPath.PathPoints[pathIndex] + OffsetPosition; } }
 
     [SerializeField] private Vector3 velocity; 
     public Vector3 Velocity { get { return velocity;} }
@@ -127,6 +126,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     IEnumerator FollowPath()
     {
         isMoving = true;
+        pathIndex = 1; 
         List<Vector3> _followingPath = currentPath.PathPoints;  //List of points in the path
 
         /*STEERING*/
@@ -137,9 +137,9 @@ public class CustomNavMeshAgent : MonoBehaviour
         Vector3 _predictedPosition;
 
         // Previous Position
-        Vector3 _previousPosition = transform.position; ;
+        Vector3 _previousPosition = transform.position; 
         //Next Position
-        Vector3 _nextPosition = _followingPath[pathIndex];
+        Vector3 _nextPosition = _followingPath[pathIndex] + OffsetPosition;
 
         Vector3 _dir;
         Vector3 _targetPosition;
@@ -148,14 +148,23 @@ public class CustomNavMeshAgent : MonoBehaviour
         RaycastHit _hit; 
         // Magnitude of the normal from the dir b reaching the predicted location
         float _distance = 0;
-        
+
+        /* First the velocity is equal to the normalized direction from the agent position to the next position */
+        velocity = (_nextPosition - transform.position).normalized;
+
         while (Vector3.Distance(transform.position, LastPosition) > radius)
         {
-            velocity.y = 0;
-             
-            //transform.position = Vector3.Lerp(transform.position, _followingPath[pathIndex], Time.deltaTime * maxSpeed); 
-            transform.position += velocity*Time.deltaTime*maxSpeed; 
-            if (Vector3.Distance(transform.position, TargetedPosition) < .1f)
+            //Debug.Log(velocity); 
+            /* Apply the velocity to the transform position multiply by the speed and by Time.deltaTime to move*/
+            transform.position += velocity*Time.deltaTime*maxSpeed;
+
+            /* If the agent is close to the next position
+             * Update the previous and the next point
+             * Also update the pathIndex
+             * if the pathindex is greater than the pathcount break the loop
+             * else continue in the loop
+             */
+            if (Vector3.Distance(transform.position, _nextPosition) <= .1f)
             {
                 //set the new previous position
                 _previousPosition = _followingPath[pathIndex] + OffsetPosition;
@@ -166,36 +175,46 @@ public class CustomNavMeshAgent : MonoBehaviour
                 _nextPosition = _followingPath[pathIndex] + OffsetPosition;
                 continue; 
             }
-            velocity = (TargetedPosition - transform.position).normalized; 
-            //Predicted velocity of the agent
+
+            /* Get the predicted Velocity and the Predicted position*/
             _predictedVelocity = velocity;
-            //PredictedPosition of the agent
             _predictedPosition = transform.position + _predictedVelocity;
-            //Get the transposed Position of the predicted position on the segment between the previous and the next point
+
+            /*Get the transposed Position of the predicted position on the segment between the previous and the next point
+            * The agent has to get closer while it's to far away from the path 
+            */
             _normalPoint = GetNormalPoint(_predictedPosition, _previousPosition, _nextPosition);
-            // Direction of the segment between the previous and the next position normalized
-            _dir = (_nextPosition - _previousPosition).normalized * 10;
-            //Targeted position is the normal point + a offset defined by the direction of the segment
-            _targetPosition = _normalPoint + _dir; 
-            //Distance between the predicted position and the normal point on the segment 
+
+
+            /* Direction of the segment between the previous and the next position normalized in order to go further on the path
+             * Targeted position is the normal point + a offset defined by the direction of the segment to go a little further on the path
+             */
+            _dir = (_nextPosition - _previousPosition).normalized;
+            _targetPosition = _normalPoint + _dir;
+
+            /* Distance between the predicted position and the normal point on the segment 
+             * If the distance is greater than the radius, it has to steer to get closer
+             */
             _distance = Vector3.Distance(_predictedPosition, _normalPoint);
-            //If the distance is greater than the radius, it has to steer to get closer
-            if (_distance > radius || velocity == Vector3.zero)
+            if (_distance > (radius))
             {
-                Debug.Log("Seek"); 
                 Seek(_targetPosition);
             }
-            //Check if there is any obstacle in front of the agent
-            if(Physics.Raycast(new Ray(transform.position, velocity), out _hit, detectionRange))
-            {
-                Vector3 _avoidDir = (_hit.point - _hit.transform.position).normalized;
-                velocity += _avoidDir;
-                velocity = velocity.normalized; 
-            }
+
+            /* Check if there is any obstacle in front of the agent
+             * 
+             */
+             // if(Physics.Raycast(new Ray(transform.position, velocity), out _hit, detectionRange))
+             // {
+             //     Vector3 _avoidDir = (_hit.point - _hit.transform.position).normalized;
+             //     _avoidDir.y = 0; 
+             //     velocity += _avoidDir.normalized;
+             //     velocity = velocity.normalized; 
+             // }
             yield return new WaitForEndOfFrame();
         }
         pathState = CalculatingState.Waiting;
-        pathIndex = 0; 
+        pathIndex = 1; 
         isMoving = false;
         OnDestinationReached?.Invoke();
     }
@@ -213,20 +232,31 @@ public class CustomNavMeshAgent : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Get the transposed point of the predicted position on a segement between the previous and the next position
+    /// </summary>
+    /// <param name="_predictedPosition">Predicted Position</param>
+    /// <param name="_previousPosition">Previous Position</param>
+    /// <param name="_nextPosition">Next Position</param>
+    /// <returns></returns>
     Vector3 GetNormalPoint(Vector3 _predictedPosition, Vector3 _previousPosition, Vector3 _nextPosition)
     {
         Vector3 _ap = _predictedPosition - _previousPosition;
         Vector3 _ab = (_nextPosition - _previousPosition).normalized;
-        _ab = _ab * (Vector3.Dot(_ap, _ab));
-        return (_previousPosition + _ab); 
+        Vector3 _ah = _ab * (Vector3.Dot(_ap, _ab));
+        return (_previousPosition + _ah); 
     }
 
+    /// <summary>
+    /// Calculate the needed velocity 
+    /// Desired velocity - currentVelocity
+    /// </summary>
+    /// <param name="_target"></param>
     void Seek(Vector3 _target)
     {
-        Vector3 _desiredVelocity = (_target - (transform.position - OffsetPosition)).normalized;
-        Vector3 _steer = (_desiredVelocity - velocity) * steerForce;
-        //_steer = Vector3.ClampMagnitude(_steer, speed);
-        velocity = _steer.normalized;
+        Vector3 _desiredVelocity = (_target - transform.position).normalized;
+        Vector3 _steer = (_desiredVelocity - velocity);
+        velocity = (velocity + _steer).normalized;
     }
     #endregion
 
