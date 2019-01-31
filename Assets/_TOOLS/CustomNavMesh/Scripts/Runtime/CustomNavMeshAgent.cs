@@ -27,8 +27,10 @@ Description: Try to add steering to the agent
 
 Update n°: 003
 Updated by: Thiebaut Alexis
-Date: 25/01/2019
-Description: 
+Date: 25/01/2019 - 31/01/2019
+Description: Adding Steering Behaviour to the agent
+             - The path is now smoothed
+             - The agent can't avoid each other. Still have to implement the agent avoidance
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
@@ -57,7 +59,9 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     [SerializeField, Range(1, 10)] private float detectionRange = 2;
 
-    [SerializeField, Range(.1f, 10)] private float steerForce = 2; 
+    [SerializeField, Range(.1f, 10)] private float steerForce = 2;
+
+    [SerializeField, Range(.1f, 10)] private float avoidanceForce = 2;
     #endregion
 
     #region int
@@ -78,7 +82,14 @@ public class CustomNavMeshAgent : MonoBehaviour
     public Vector3 OffsetSize { get { return new Vector3(radius, height, radius); } }
     public Vector3 OffsetPosition { get { return new Vector3(0, (height / 2) + offset, 0); } }
 
-    public Vector3 LastPosition { get { return currentPath.PathPoints.Last() + OffsetPosition; } }
+    public Vector3 LastPosition
+    {
+        get
+        {
+            if (currentPath.PathPoints.Count == 0) return transform.position; 
+            return currentPath.PathPoints.Last() + OffsetPosition;
+        }
+    }
 
     [SerializeField] private Vector3 velocity; 
     public Vector3 Velocity { get { return velocity;} }
@@ -149,7 +160,8 @@ public class CustomNavMeshAgent : MonoBehaviour
         float _distance = 0;
 
         /* First the velocity is equal to the normalized direction from the agent position to the next position */
-        velocity = (_nextPosition - transform.position).normalized*speed;
+        if(velocity == Vector3.zero)
+            velocity = (_nextPosition - transform.position).normalized*speed;
 
         while (Vector3.Distance(transform.position, LastPosition) > radius)
         {
@@ -203,17 +215,7 @@ public class CustomNavMeshAgent : MonoBehaviour
             {
                 Seek(_targetPosition);
             }
-
-            /* Check if there is any obstacle in front of the agent
-             * 
-             */
-             // if(Physics.Raycast(new Ray(transform.position, velocity), out _hit, detectionRange))
-             // {
-             //     Vector3 _avoidDir = (_hit.point - _hit.transform.position).normalized;
-             //     _avoidDir.y = 0; 
-             //     velocity += _avoidDir.normalized;
-             //     velocity = velocity.normalized; 
-             // }
+            /* Check if there is any obstacle in front of the agent*/
             yield return new WaitForEndOfFrame();
         }
         pathState = CalculatingState.Waiting;
@@ -233,6 +235,17 @@ public class CustomNavMeshAgent : MonoBehaviour
                 SetDestination(_hit.point);
             }
         }
+        else if(Input.GetKeyDown(KeyCode.Mouse1))
+        {
+            StopAgent(); 
+        }
+    }
+
+    void StopAgent()
+    {
+        StopCoroutine(FollowPath());
+        isMoving = false;
+        currentPath.PathPoints.Clear(); 
     }
 
     /// <summary>
@@ -265,10 +278,6 @@ public class CustomNavMeshAgent : MonoBehaviour
     #endregion
 
     #region UnityMethods
-    private void Start()
-    {
-    }
-
     private void Update()
     {
         SetTarget(); 
