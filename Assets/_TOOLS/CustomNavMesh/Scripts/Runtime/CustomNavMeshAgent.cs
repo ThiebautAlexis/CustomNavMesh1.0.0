@@ -53,12 +53,11 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     [SerializeField, Range(-5, 5)]private float offset = 0;
 
-    private float speed = 1;
-    [SerializeField, Range(.1f, 10)]private  float maxSpeed = 1;
+    [SerializeField, Range(.1f, 10)]private  float speed = 1;
 
     [SerializeField, Range(1, 10)] private float detectionRange = 2;
 
-    [SerializeField, Range(1, 10)] private float steerForce = 2; 
+    [SerializeField, Range(.1f, 10)] private float steerForce = 2; 
     #endregion
 
     #region int
@@ -150,13 +149,12 @@ public class CustomNavMeshAgent : MonoBehaviour
         float _distance = 0;
 
         /* First the velocity is equal to the normalized direction from the agent position to the next position */
-        velocity = (_nextPosition - transform.position).normalized;
+        velocity = (_nextPosition - transform.position).normalized*speed;
 
         while (Vector3.Distance(transform.position, LastPosition) > radius)
         {
-            //Debug.Log(velocity); 
             /* Apply the velocity to the transform position multiply by the speed and by Time.deltaTime to move*/
-            transform.position += velocity*Time.deltaTime*maxSpeed;
+            transform.position += velocity*Time.deltaTime;
 
             /* If the agent is close to the next position
              * Update the previous and the next point
@@ -188,9 +186,14 @@ public class CustomNavMeshAgent : MonoBehaviour
 
             /* Direction of the segment between the previous and the next position normalized in order to go further on the path
              * Targeted position is the normal point + a offset defined by the direction of the segment to go a little further on the path
+             * If the target is out of the segment between the previous and the next position, the target position is the next position
              */
             _dir = (_nextPosition - _previousPosition).normalized;
             _targetPosition = _normalPoint + _dir;
+            if(Vector3.Distance(_previousPosition, _targetPosition) > Vector3.Distance(_previousPosition, _nextPosition))
+            {
+                Seek(_nextPosition); 
+            }
 
             /* Distance between the predicted position and the normal point on the segment 
              * If the distance is greater than the radius, it has to steer to get closer
@@ -254,9 +257,10 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <param name="_target"></param>
     void Seek(Vector3 _target)
     {
-        Vector3 _desiredVelocity = (_target - transform.position).normalized;
-        Vector3 _steer = (_desiredVelocity - velocity);
-        velocity = (velocity + _steer).normalized;
+        Vector3 _desiredVelocity = (_target - transform.position).normalized * speed;
+        Vector3 _steer = (_desiredVelocity - velocity)*steerForce;
+        velocity += _steer;
+        transform.LookAt(transform.position + velocity); 
     }
     #endregion
 
