@@ -35,27 +35,28 @@ Description: Adding Steering Behaviour to the agent
 public class CustomNavMeshAgent : MonoBehaviour
 {
     #region Events
+    public event Action OnMovementStarted; 
     public event Action OnDestinationReached;
     #endregion
 
     #region FieldsAndProperty
-
-    #region bool
-    bool isMoving = false;
-    public bool IsMoving { get { return isMoving; } }
+    #region Inspector
+    #region Vector3
+    [Header("Agent Settings")]
+    [SerializeField] private Vector3 positionOffset;
+    public Vector3 CenterPosition { get { return transform.position + positionOffset; } }
     #endregion
 
     #region float
-    [Header("Agent Settings")]
-    [SerializeField, Range(.1f, 5)]private float height = 1;
+    [SerializeField, Range(.1f, 5)] private float height = 1;
     public float Height { get { return height / 2; } }
 
-    [SerializeField, Range(.5f, 2)]private float radius = 1;
+    [SerializeField, Range(.5f, 2)] private float radius = 1;
     public float Radius { get { return radius * .75f; } }
 
-    [SerializeField, Range(-5, 5)]private float offset = 0;
+    [SerializeField, Range(-5, 5)] private float offset = 0;
 
-    [SerializeField, Range(.1f, 10)]private  float speed = 1;
+    [SerializeField, Range(.1f, 10)] private float speed = 1;
 
     [SerializeField, Range(1, 10)] private float detectionRange = 2;
 
@@ -64,12 +65,23 @@ public class CustomNavMeshAgent : MonoBehaviour
     [SerializeField, Range(.1f, 10)] private float avoidanceForce = 2;
     #endregion
 
+    #region bool
+    [SerializeField] private bool rotateAgent = true;
+    #endregion
+    #endregion
+
+    #region Other Fields and properties
+    #region bool
+    bool isMoving = false;
+    public bool IsMoving { get { return isMoving; } }
+    #endregion
+
     #region int
     int pathIndex = 0;
     #endregion
 
     #region Path
-    [SerializeField] private CustomNavPath currentPath = new CustomNavPath();
+    private CustomNavPath currentPath = new CustomNavPath();
     public CustomNavPath CurrentPath { get { return currentPath; } }
     #endregion
 
@@ -86,30 +98,18 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         get
         {
-            if (currentPath.PathPoints.Count == 0) return transform.position; 
+            if (currentPath.PathPoints.Count == 0) return CenterPosition; 
             return currentPath.PathPoints.Last() + OffsetPosition;
         }
     }
 
-    [SerializeField] private Vector3 velocity; 
+    private Vector3 velocity; 
     public Vector3 Velocity { get { return velocity;} }
+    #endregion
     #endregion
     #endregion
 
     #region Methods
-    /// <summary>
-    /// Calculate a path until reaching a destination
-    /// </summary>
-    /// <param name="_position">destination to reach</param>
-    public void SetDestination(Vector3 _position)
-    {
-        pathState = CalculatingState.Calculating;
-        if (PathCalculator.CalculatePath(transform.position, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
-        {
-            pathState = CalculatingState.Ready;
-            StartCoroutine(FollowPath());
-        }
-    }
 
     /// <summary>
     /// Check if the destination can be reached
@@ -119,7 +119,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     public bool CheckDestination(Vector3 _position)
     {
         pathState = CalculatingState.Calculating;
-        bool _canBeReached = PathCalculator.CalculatePath(transform.position, _position, currentPath, CustomNavMeshManager.Instance.Triangles);
+        bool _canBeReached = PathCalculator.CalculatePath(CenterPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles);
         if (_canBeReached)
         {
             pathState = CalculatingState.Ready;
@@ -136,18 +136,18 @@ public class CustomNavMeshAgent : MonoBehaviour
     IEnumerator FollowPath()
     {
         isMoving = true;
-        pathIndex = 1; 
+        pathIndex = 1;
         List<Vector3> _followingPath = currentPath.PathPoints;  //List of points in the path
 
         /*STEERING*/
-        
+
         //Predicted Velocity
-        Vector3 _predictedVelocity;   
+        Vector3 _predictedVelocity;
         //Predicted position if the agent use the predicted velocity
         Vector3 _predictedPosition;
 
         // Previous Position
-        Vector3 _previousPosition = transform.position; 
+        Vector3 _previousPosition = CenterPosition;
         //Next Position
         Vector3 _nextPosition = _followingPath[pathIndex] + OffsetPosition;
 
@@ -155,18 +155,17 @@ public class CustomNavMeshAgent : MonoBehaviour
         Vector3 _targetPosition;
         Vector3 _normalPoint;
 
-        RaycastHit _hit; 
         // Magnitude of the normal from the dir b reaching the predicted location
         float _distance = 0;
 
         /* First the velocity is equal to the normalized direction from the agent position to the next position */
-        if(velocity == Vector3.zero)
-            velocity = (_nextPosition - transform.position).normalized*speed;
+        if (velocity == Vector3.zero)
+            velocity = (_nextPosition - CenterPosition).normalized * speed;
 
-        while (Vector3.Distance(transform.position, LastPosition) > radius)
+        while (Vector3.Distance(CenterPosition, LastPosition) > radius)
         {
             /* Apply the velocity to the transform position multiply by the speed and by Time.deltaTime to move*/
-            transform.position += velocity*Time.deltaTime;
+            transform.position += velocity * Time.deltaTime;
 
             /* If the agent is close to the next position
              * Update the previous and the next point
@@ -174,21 +173,21 @@ public class CustomNavMeshAgent : MonoBehaviour
              * if the pathindex is greater than the pathcount break the loop
              * else continue in the loop
              */
-            if (Vector3.Distance(transform.position, _nextPosition) <= .1f)
+            if (Vector3.Distance(CenterPosition, _nextPosition) <= .1f)
             {
                 //set the new previous position
                 _previousPosition = _followingPath[pathIndex] + OffsetPosition;
                 //Increasing path index
                 pathIndex++;
-                if (pathIndex > _followingPath.Count - 1) break; 
+                if (pathIndex > _followingPath.Count - 1) break;
                 //Set the new next Position
                 _nextPosition = _followingPath[pathIndex] + OffsetPosition;
-                continue; 
+                continue;
             }
 
             /* Get the predicted Velocity and the Predicted position*/
             _predictedVelocity = velocity;
-            _predictedPosition = transform.position + _predictedVelocity;
+            _predictedPosition = CenterPosition + _predictedVelocity;
 
             /*Get the transposed Position of the predicted position on the segment between the previous and the next point
             * The agent has to get closer while it's to far away from the path 
@@ -202,9 +201,9 @@ public class CustomNavMeshAgent : MonoBehaviour
              */
             _dir = (_nextPosition - _previousPosition).normalized;
             _targetPosition = _normalPoint + _dir;
-            if(Vector3.Distance(_previousPosition, _targetPosition) > Vector3.Distance(_previousPosition, _nextPosition))
+            if (Vector3.Distance(_previousPosition, _targetPosition) > Vector3.Distance(_previousPosition, _nextPosition))
             {
-                Seek(_nextPosition); 
+                Seek(_nextPosition);
             }
 
             /* Distance between the predicted position and the normal point on the segment 
@@ -219,33 +218,9 @@ public class CustomNavMeshAgent : MonoBehaviour
             yield return new WaitForEndOfFrame();
         }
         pathState = CalculatingState.Waiting;
-        pathIndex = 1; 
+        pathIndex = 1;
         isMoving = false;
         OnDestinationReached?.Invoke();
-    }
-
-    void SetTarget()
-    {
-        if(Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            if (isMoving) return;
-            RaycastHit _hit;  
-            if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hit))
-            {
-                SetDestination(_hit.point);
-            }
-        }
-        else if(Input.GetKeyDown(KeyCode.Mouse1))
-        {
-            StopAgent(); 
-        }
-    }
-
-    void StopAgent()
-    {
-        StopCoroutine(FollowPath());
-        isMoving = false;
-        currentPath.PathPoints.Clear(); 
     }
 
     /// <summary>
@@ -260,7 +235,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         Vector3 _ap = _predictedPosition - _previousPosition;
         Vector3 _ab = (_nextPosition - _previousPosition).normalized;
         Vector3 _ah = _ab * (Vector3.Dot(_ap, _ab));
-        return (_previousPosition + _ah); 
+        return (_previousPosition + _ah);
     }
 
     /// <summary>
@@ -270,32 +245,60 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <param name="_target"></param>
     void Seek(Vector3 _target)
     {
-        Vector3 _desiredVelocity = (_target - transform.position).normalized * speed;
-        Vector3 _steer = (_desiredVelocity - velocity)*steerForce;
+        Vector3 _desiredVelocity = (_target - CenterPosition).normalized * speed;
+        Vector3 _steer = (_desiredVelocity - velocity) * steerForce;
         velocity += _steer;
-        transform.LookAt(transform.position + velocity); 
+        if(rotateAgent) transform.LookAt(CenterPosition + velocity);
+    }
+
+    /// <summary>
+    /// Calculate a path until reaching a destination
+    /// </summary>
+    /// <param name="_position">destination to reach</param>
+    public void SetDestination(Vector3 _position)
+    {
+        pathState = CalculatingState.Calculating;
+        if (PathCalculator.CalculatePath(CenterPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
+        {
+            pathState = CalculatingState.Ready;
+            StartCoroutine(FollowPath());
+        }
+    }
+
+    void StopAgent()
+    {
+        StopCoroutine(FollowPath());
+        isMoving = false;
+        currentPath.PathPoints.Clear(); 
     }
     #endregion
 
     #region UnityMethods
     private void Update()
     {
-        SetTarget(); 
+        if(Input.GetKey(KeyCode.Mouse0))
+        {
+            RaycastHit _hit; 
+            if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hit))
+            {
+                SetDestination(_hit.point); 
+            }
+        }
     }
-
     private void OnDrawGizmos()
     {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawSphere(CenterPosition, .1f); 
         Gizmos.color = Color.cyan;
-        Gizmos.DrawSphere(transform.position + velocity, .1f);
-        Gizmos.DrawLine(transform.position, transform.position + velocity );
+        Gizmos.DrawSphere(CenterPosition + velocity, .1f);
+        Gizmos.DrawLine(CenterPosition, CenterPosition + velocity );
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(transform.position - OffsetPosition, .1f);
+        Gizmos.DrawSphere(CenterPosition - OffsetPosition, .1f);
         if (currentPath == null || currentPath.PathPoints == null || currentPath.PathPoints.Count == 0) return;
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
             Gizmos.DrawSphere(currentPath.PathPoints[i], .2f);
         }
-        //Gizmos.DrawLine(transform.position, TargetedPosition);
         for (int i = 0; i < currentPath.PathPoints.Count - 1; i++)
         {
             Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]);

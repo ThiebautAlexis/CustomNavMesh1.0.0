@@ -89,7 +89,7 @@ public class CustomNavMeshAgentEditor : Editor
 
     private void OnSceneGUI()
     {
-        DrawWireCylinder(p_target.transform.position, p_target.Radius, p_target.Height, Color.green);
+        DrawWireCylinder(p_target.CenterPosition, p_target.Radius, p_target.Height, Color.green);
     }
     #endregion
 
