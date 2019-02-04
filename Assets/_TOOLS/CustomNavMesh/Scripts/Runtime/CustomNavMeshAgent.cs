@@ -31,6 +31,11 @@ Date: 25/01/2019 - 31/01/2019
 Description: Adding Steering Behaviour to the agent
              - The path is now smoothed
              - The agent can't avoid each other. Still have to implement the agent avoidance
+
+Update n°: 004
+Updated by: Thiebaut Alexis
+Date: 04/02/2019 
+Description: Fixing Offseted Positions errors
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
@@ -44,7 +49,6 @@ public class CustomNavMeshAgent : MonoBehaviour
     #region Vector3
     [Header("Agent Settings")]
     [SerializeField] private Vector3 positionOffset;
-    public Vector3 CenterPosition { get { return transform.position + positionOffset; } }
     #endregion
 
     #region float
@@ -54,7 +58,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     [SerializeField, Range(.5f, 2)] private float radius = 1;
     public float Radius { get { return radius * .75f; } }
 
-    [SerializeField, Range(-5, 5)] private float offset = 0;
+    [SerializeField, Range(-5, 5)] private float baseOffset = 0;
 
     [SerializeField, Range(.1f, 10)] private float speed = 1;
 
@@ -65,9 +69,6 @@ public class CustomNavMeshAgent : MonoBehaviour
     [SerializeField, Range(.1f, 10)] private float avoidanceForce = 2;
     #endregion
 
-    #region bool
-    [SerializeField] private bool rotateAgent = true;
-    #endregion
     #endregion
 
     #region Other Fields and properties
@@ -91,15 +92,23 @@ public class CustomNavMeshAgent : MonoBehaviour
     #endregion
 
     #region Vector3
+    public Vector3 CenterPosition { get { return transform.position + positionOffset; } }
     public Vector3 OffsetSize { get { return new Vector3(radius, height, radius); } }
-    public Vector3 OffsetPosition { get { return new Vector3(0, (height / 2) + offset, 0); } }
+    public Vector3 OffsetPosition
+    {
+        get
+        {
+            Vector3 _heightOffset = new Vector3(0, (height / 2) + baseOffset, 0);
+            return  CenterPosition - _heightOffset ;
+        }
+    }
 
     public Vector3 LastPosition
     {
         get
         {
             if (currentPath.PathPoints.Count == 0) return CenterPosition; 
-            return currentPath.PathPoints.Last() + OffsetPosition;
+            return currentPath.PathPoints.Last();
         }
     }
 
@@ -149,7 +158,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         // Previous Position
         Vector3 _previousPosition = CenterPosition;
         //Next Position
-        Vector3 _nextPosition = _followingPath[pathIndex] + OffsetPosition;
+        Vector3 _nextPosition = _followingPath[pathIndex];
 
         Vector3 _dir;
         Vector3 _targetPosition;
@@ -160,9 +169,9 @@ public class CustomNavMeshAgent : MonoBehaviour
 
         /* First the velocity is equal to the normalized direction from the agent position to the next position */
         if (velocity == Vector3.zero)
-            velocity = (_nextPosition - CenterPosition).normalized * speed;
+            velocity = (_nextPosition - OffsetPosition).normalized * speed;
 
-        while (Vector3.Distance(CenterPosition, LastPosition) > radius)
+        while (Vector3.Distance(OffsetPosition, LastPosition) > radius)
         {
             /* Apply the velocity to the transform position multiply by the speed and by Time.deltaTime to move*/
             transform.position += velocity * Time.deltaTime;
@@ -173,21 +182,21 @@ public class CustomNavMeshAgent : MonoBehaviour
              * if the pathindex is greater than the pathcount break the loop
              * else continue in the loop
              */
-            if (Vector3.Distance(CenterPosition, _nextPosition) <= .1f)
+            if (Vector3.Distance(OffsetPosition, _nextPosition) <= .1f)
             {
                 //set the new previous position
-                _previousPosition = _followingPath[pathIndex] + OffsetPosition;
+                _previousPosition = _followingPath[pathIndex];
                 //Increasing path index
                 pathIndex++;
                 if (pathIndex > _followingPath.Count - 1) break;
                 //Set the new next Position
-                _nextPosition = _followingPath[pathIndex] + OffsetPosition;
+                _nextPosition = _followingPath[pathIndex];
                 continue;
             }
 
             /* Get the predicted Velocity and the Predicted position*/
             _predictedVelocity = velocity;
-            _predictedPosition = CenterPosition + _predictedVelocity;
+            _predictedPosition = OffsetPosition + _predictedVelocity;
 
             /*Get the transposed Position of the predicted position on the segment between the previous and the next point
             * The agent has to get closer while it's to far away from the path 
@@ -245,10 +254,9 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <param name="_target"></param>
     void Seek(Vector3 _target)
     {
-        Vector3 _desiredVelocity = (_target - CenterPosition).normalized * speed;
+        Vector3 _desiredVelocity = (_target - OffsetPosition).normalized * speed;
         Vector3 _steer = (_desiredVelocity - velocity) * steerForce;
         velocity += _steer;
-        if(rotateAgent) transform.LookAt(CenterPosition + velocity);
     }
 
     /// <summary>
@@ -293,7 +301,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         Gizmos.DrawSphere(CenterPosition + velocity, .1f);
         Gizmos.DrawLine(CenterPosition, CenterPosition + velocity );
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(CenterPosition - OffsetPosition, .1f);
+        Gizmos.DrawSphere(OffsetPosition, .1f);
         if (currentPath == null || currentPath.PathPoints == null || currentPath.PathPoints.Count == 0) return;
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
