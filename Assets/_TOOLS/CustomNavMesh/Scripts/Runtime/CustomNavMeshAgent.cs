@@ -36,6 +36,11 @@ Update n°: 004
 Updated by: Thiebaut Alexis
 Date: 04/02/2019 
 Description: Fixing Offseted Positions errors
+
+Update n°: 005
+Updated by: Thiebaut Alexis
+Date: 05/02/2019 
+Description: Completing Stop Agent Method
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
@@ -64,7 +69,7 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     [SerializeField, Range(1, 10)] private float detectionRange = 2;
 
-    [SerializeField, Range(.1f, 10)] private float steerForce = 2;
+    [SerializeField, Range(.1f, 10)] private float steerForce = .1f;
 
     [SerializeField, Range(.1f, 10)] private float avoidanceForce = 2;
     #endregion
@@ -107,7 +112,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         get
         {
-            if (currentPath.PathPoints.Count == 0) return CenterPosition; 
+            if (currentPath.PathPoints.Count == 0) return OffsetPosition; 
             return currentPath.PathPoints.Last();
         }
     }
@@ -128,7 +133,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     public bool CheckDestination(Vector3 _position)
     {
         pathState = CalculatingState.Calculating;
-        bool _canBeReached = PathCalculator.CalculatePath(CenterPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles);
+        bool _canBeReached = PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles);
         if (_canBeReached)
         {
             pathState = CalculatingState.Ready;
@@ -147,25 +152,29 @@ public class CustomNavMeshAgent : MonoBehaviour
         isMoving = true;
         pathIndex = 1;
         List<Vector3> _followingPath = currentPath.PathPoints;  //List of points in the path
-
+        Debug.Log(_followingPath.Count); 
         /*STEERING*/
 
+        /*
         //Predicted Velocity
         Vector3 _predictedVelocity;
         //Predicted position if the agent use the predicted velocity
         Vector3 _predictedPosition;
+        */ 
 
         // Previous Position
-        Vector3 _previousPosition = CenterPosition;
+        Vector3 _previousPosition = OffsetPosition;
         //Next Position
         Vector3 _nextPosition = _followingPath[pathIndex];
 
+        /*
         Vector3 _dir;
         Vector3 _targetPosition;
         Vector3 _normalPoint;
+        */
 
         // Magnitude of the normal from the dir b reaching the predicted location
-        float _distance = 0;
+        // float _distance = 0;
 
         /* First the velocity is equal to the normalized direction from the agent position to the next position */
         if (velocity == Vector3.zero)
@@ -194,36 +203,34 @@ public class CustomNavMeshAgent : MonoBehaviour
                 continue;
             }
 
-            /* Get the predicted Velocity and the Predicted position*/
-            _predictedVelocity = velocity;
-            _predictedPosition = OffsetPosition + _predictedVelocity;
+            /* Always seek the next position to have a smooth path */
+            Seek(_nextPosition);
 
-            /*Get the transposed Position of the predicted position on the segment between the previous and the next point
-            * The agent has to get closer while it's to far away from the path 
-            */
-            _normalPoint = GetNormalPoint(_predictedPosition, _previousPosition, _nextPosition);
-
-
-            /* Direction of the segment between the previous and the next position normalized in order to go further on the path
-             * Targeted position is the normal point + a offset defined by the direction of the segment to go a little further on the path
-             * If the target is out of the segment between the previous and the next position, the target position is the next position
-             */
-            _dir = (_nextPosition - _previousPosition).normalized;
-            _targetPosition = _normalPoint + _dir;
-            if (Vector3.Distance(_previousPosition, _targetPosition) > Vector3.Distance(_previousPosition, _nextPosition))
-            {
-                Seek(_nextPosition);
-            }
-
-            /* Distance between the predicted position and the normal point on the segment 
-             * If the distance is greater than the radius, it has to steer to get closer
-             */
-            _distance = Vector3.Distance(_predictedPosition, _normalPoint);
-            if (_distance > (radius))
-            {
-                Seek(_targetPosition);
-            }
-            /* Check if there is any obstacle in front of the agent*/
+            // /* Get the predicted Velocity and the Predicted position*/
+            // _predictedPosition = OffsetPosition + velocity;
+            //  
+            //  /*Get the transposed Position of the predicted position on the segment between the previous and the next point
+            //  * The agent has to get closer while it's to far away from the path 
+            //  */
+            //  _normalPoint = GetNormalPoint(_predictedPosition, _previousPosition, _nextPosition);
+            //  
+            //  
+            // /* Direction of the segment between the previous and the next position normalized in order to go further on the path
+            //  * Targeted position is the normal point + an offset defined by the direction of the segment to go a little further on the path
+            //  * If the target is out of the segment between the previous and the next position, the target position is the next position
+            //  */
+            // _dir = (_nextPosition - _previousPosition).normalized;
+            // _targetPosition = _normalPoint + _dir;
+            // 
+            // /* Distance between the predicted position and the normal point on the segment 
+            //  * If the distance is greater than the radius, it has to steer to get closer
+            //  */
+            //  _distance = Vector3.Distance(_predictedPosition, _normalPoint);
+            //  if (_distance > radius)
+            //  {
+            //      Seek(_nextPosition);
+            //  }
+            // /* Check if there is any obstacle in front of the agent*/
             yield return new WaitForEndOfFrame();
         }
         pathState = CalculatingState.Waiting;
@@ -266,7 +273,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     public void SetDestination(Vector3 _position)
     {
         pathState = CalculatingState.Calculating;
-        if (PathCalculator.CalculatePath(CenterPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
+        if (PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
         {
             pathState = CalculatingState.Ready;
             StartCoroutine(FollowPath());
@@ -276,21 +283,28 @@ public class CustomNavMeshAgent : MonoBehaviour
     void StopAgent()
     {
         StopCoroutine(FollowPath());
-        isMoving = false;
         currentPath.PathPoints.Clear(); 
+        isMoving = false;
+        pathState = CalculatingState.Waiting;
+        pathIndex = 1;
+        velocity = Vector3.zero; 
     }
     #endregion
 
     #region UnityMethods
     private void Update()
     {
-        if(Input.GetKey(KeyCode.Mouse0))
+        if(Input.GetKeyDown(KeyCode.Mouse0))
         {
             RaycastHit _hit; 
             if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hit))
             {
                 SetDestination(_hit.point); 
             }
+        }
+        if (Input.GetKey(KeyCode.Mouse1))
+        {
+            StopAgent();
         }
     }
     private void OnDrawGizmos()
