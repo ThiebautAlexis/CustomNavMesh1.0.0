@@ -231,7 +231,7 @@ public class CustomNavMeshAgent : MonoBehaviour
             * If the distance is greater than the radius, it has to steer to get closer
             */
             _distance = Vector3.Distance(_predictedPosition, _normalPoint);
-            if (_distance > radius)
+            if (_distance > radius/2)
             {
                 Seek(_targetPosition);
             }
