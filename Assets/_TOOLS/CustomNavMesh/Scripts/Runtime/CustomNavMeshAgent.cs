@@ -140,7 +140,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         if(isMoving)
         {
-            StopCoroutine(FollowPath()); 
+            StopAllCoroutines(); 
         }
         pathState = CalculatingState.Calculating;
         bool _canBeReached = PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles);
@@ -277,7 +277,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         if(isMoving)
         {
-            StopCoroutine(FollowPath()); 
+            StopAllCoroutines();
         }
         pathState = CalculatingState.Calculating;
         if (PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
