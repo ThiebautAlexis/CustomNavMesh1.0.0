@@ -41,6 +41,12 @@ Update n°: 005
 Updated by: Thiebaut Alexis
 Date: 05/02/2019 
 Description: Completing Stop Agent Method
+
+Update n°: 00
+Updated by: Thiebaut Alexis
+Date: 07/02/2019 
+Description: Updating the CheckDestination and SetDestination Methods
+                - When the agent is already moving, stop the coroutine and calculate a new path
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
@@ -132,11 +138,16 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <returns>if the destination can be reached</returns>
     public bool CheckDestination(Vector3 _position)
     {
+        if(isMoving)
+        {
+            StopCoroutine(FollowPath()); 
+        }
         pathState = CalculatingState.Calculating;
         bool _canBeReached = PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles);
         if (_canBeReached)
         {
             pathState = CalculatingState.Ready;
+            StopAllCoroutines();
             StartCoroutine(FollowPath());
         }
         else pathState = CalculatingState.Waiting;
@@ -149,6 +160,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <returns></returns>
     IEnumerator FollowPath()
     {
+        OnMovementStarted?.Invoke(); 
         isMoving = true;
         pathIndex = 1;
         List<Vector3> _followingPath = currentPath.PathPoints;  //List of points in the path
@@ -161,7 +173,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         // Previous Position
         Vector3 _previousPosition = OffsetPosition;
         //Next Position
-        Vector3 _nextPosition = _followingPath[pathIndex];
+        Vector3 _nextPosition = _followingPath[1];
 
         
         Vector3 _dir;
@@ -174,10 +186,11 @@ public class CustomNavMeshAgent : MonoBehaviour
 
         /* First the velocity is equal to the normalized direction from the agent position to the next position */
         if (velocity == Vector3.zero)
-            velocity = (_nextPosition - OffsetPosition).normalized * speed;
+            velocity = transform.forward * speed;
+        Seek(_nextPosition); 
 
         while (Vector3.Distance(OffsetPosition, LastPosition) > radius)
-        {
+        {            
             /* Apply the velocity to the transform position multiply by the speed and by Time.deltaTime to move*/
             transform.position += velocity * Time.deltaTime;
 
@@ -251,8 +264,9 @@ public class CustomNavMeshAgent : MonoBehaviour
     void Seek(Vector3 _target)
     {
         Vector3 _desiredVelocity = (_target - OffsetPosition).normalized * speed;
-        Vector3 _steer = (_desiredVelocity - velocity) * steerForce * Time.deltaTime;
+        Vector3 _steer = ((_desiredVelocity - velocity) * steerForce * Time.deltaTime );
         velocity += _steer;
+        velocity = Vector3.ClampMagnitude(velocity, speed); 
     }
 
     /// <summary>
@@ -261,6 +275,10 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <param name="_position">destination to reach</param>
     public void SetDestination(Vector3 _position)
     {
+        if(isMoving)
+        {
+            StopCoroutine(FollowPath()); 
+        }
         pathState = CalculatingState.Calculating;
         if (PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
         {
@@ -269,33 +287,21 @@ public class CustomNavMeshAgent : MonoBehaviour
         }
     }
 
-    void StopAgent()
+    /// <summary>
+    /// Stop the agent
+    /// Stop the coroutine and reset all settings
+    /// </summary>
+    public void StopAgent()
     {
         StopCoroutine(FollowPath());
         currentPath.PathPoints.Clear(); 
         isMoving = false;
         pathState = CalculatingState.Waiting;
         pathIndex = 1;
-        velocity = Vector3.zero; 
     }
     #endregion
 
     #region UnityMethods
-    private void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            RaycastHit _hit; 
-            if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hit))
-            {
-                SetDestination(_hit.point); 
-            }
-        }
-        if (Input.GetKey(KeyCode.Mouse1))
-        {
-            StopAgent();
-        }
-    }
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;
