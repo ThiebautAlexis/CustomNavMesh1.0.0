@@ -146,6 +146,8 @@ public static class GeometryHelper
     #region Vector3
     /// <summary>
     /// Get the transposed point of the predicted position on a segement between the previous and the next position
+    /// Check if the targeted point is on the segment between the previous and the next points
+    /// If it doesn't the normal point become the _nextPosition
     /// </summary>
     /// <param name="_predictedPosition">Predicted Position</param>
     /// <param name="_previousPosition">Previous Position</param>
@@ -156,7 +158,14 @@ public static class GeometryHelper
         Vector3 _ap = _predictedPosition - _previousPosition;
         Vector3 _ab = (_nextPosition - _previousPosition).normalized;
         Vector3 _ah = _ab * (Vector3.Dot(_ap, _ab));
-        return (_previousPosition + _ah);
+        Vector3 _normal = (_previousPosition + _ah);
+        Vector3 _min = Vector3.Min(_previousPosition, _nextPosition);
+        Vector3 _max = Vector3.Max(_previousPosition, _nextPosition);
+        if (_normal.x < _min.x || _normal.y < _min.y || _normal.x > _max.x || _normal.y > _max.y)
+        {
+            return _nextPosition;
+        }
+        return _normal; 
     }
     #endregion
 

@@ -73,7 +73,7 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     [SerializeField, Range(.1f, 10)] private float speed = 1;
 
-    [SerializeField, Range(1, 10)] private float detectionRange = 2;
+    [SerializeField, Range(.1f, 10)] private float detectionRange = 2;
 
     [SerializeField, Range(.1f, 10)] private float steerForce = .1f;
 
@@ -154,7 +154,7 @@ public class CustomNavMeshAgent : MonoBehaviour
             StopAllCoroutines(); 
         }
         pathState = CalculatingState.Calculating;
-        bool _canBeReached = PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles);
+        bool _canBeReached = PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Triangles);
         if (_canBeReached)
         {
             pathState = CalculatingState.Ready;
@@ -213,7 +213,7 @@ public class CustomNavMeshAgent : MonoBehaviour
              * if the pathindex is greater than the pathcount break the loop
              * else continue in the loop
              */
-            if (Vector3.Distance(OffsetPosition, _nextPosition) <= .1f)
+            if (Vector3.Distance(OffsetPosition, _nextPosition) <= radius)
             {
                 //set the new previous position
                 _previousPosition = _followingPath[pathIndex];
@@ -224,7 +224,7 @@ public class CustomNavMeshAgent : MonoBehaviour
                 _nextPosition = _followingPath[pathIndex];
                 continue;
             }
-            Collider[] _coll = Physics.OverlapSphere(CenterPosition, detectionRange/2).Where(c => c.GetComponent<CustomNavMeshAgent>() && c.gameObject != gameObject).ToArray();
+            Collider[] _coll = Physics.OverlapSphere(CenterPosition, detectionRange).Where(c => c.GetComponent<CustomNavMeshAgent>() && c.gameObject != gameObject).ToArray();
             if(_coll.Length > 0)
             {
                 _dir = Vector3.zero;
@@ -233,6 +233,7 @@ public class CustomNavMeshAgent : MonoBehaviour
                     _dir += (CenterPosition - _coll[i].transform.position); 
                 }
                 Avoid(_dir);
+                //Debug.Log("Avoid"); 
                 yield return new WaitForEndOfFrame();
                 continue; 
             }
@@ -250,21 +251,14 @@ public class CustomNavMeshAgent : MonoBehaviour
              * Targeted position is the normal point + an offset defined by the direction of the segment to go a little further on the path
              * If the target is out of the segment between the previous and the next position, the target position is the next position
              */
-            _dir = (_nextPosition - _previousPosition).normalized * speed;
+            _dir = (_nextPosition - _previousPosition).normalized;
             _targetPosition = _normalPoint + _dir;
-            
-            /* Check if the targeted point is on the segment between the previous and the next points
-             * If it doesn't the targeted position become the _nextPosition
-             */
-            if(!GeometryHelper.PointContainedInSegment(_previousPosition, _nextPosition, _targetPosition))
-            {
-                Seek(_nextPosition);
-            }
+
             /* Distance between the predicted position and the normal point on the segment 
             * If the distance is greater than the radius, it has to steer to get closer
             */
             _distance = Vector3.Distance(_predictedPosition, _normalPoint);
-            if (_distance > radius/2)
+            if (_distance > radius)
             {
                 Seek(_targetPosition);
             }
@@ -298,7 +292,7 @@ public class CustomNavMeshAgent : MonoBehaviour
             StopAllCoroutines();
         }
         pathState = CalculatingState.Calculating;
-        if (PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Instance.Triangles))
+        if (PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Triangles))
         {
             pathState = CalculatingState.Ready;
             StartCoroutine(FollowPath());
@@ -329,7 +323,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         Gizmos.DrawLine(CenterPosition, CenterPosition + velocity );
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(OffsetPosition, .1f);
-        Gizmos.DrawWireSphere(CenterPosition, detectionRange/2); 
+        Gizmos.DrawWireSphere(CenterPosition, detectionRange); 
         if (currentPath == null || currentPath.PathPoints == null || currentPath.PathPoints.Count == 0) return;
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
@@ -339,6 +333,18 @@ public class CustomNavMeshAgent : MonoBehaviour
         {
             Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]);
         }   
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            RaycastHit _hit; 
+            if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hit))
+            {
+                CheckDestination(_hit.point); 
+            }
+        }
     }
     #endregion
 }
