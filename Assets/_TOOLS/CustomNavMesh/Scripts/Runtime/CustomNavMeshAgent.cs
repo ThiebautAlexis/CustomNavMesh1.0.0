@@ -52,12 +52,15 @@ Update n°: 007
 Updated by: Thiebaut Alexis
 Date: 13/02/2019 
 Description: Updating the Avoid Method -> Now add the the avoidance direction to the velocity
+             Set set speed Property -> The speed can now be set from another script
+             Adding a event OnAgentStopped
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
     #region Events
     public event Action OnMovementStarted; 
     public event Action OnDestinationReached;
+    public event Action OnAgentStopped; 
     #endregion
 
     #region FieldsAndProperty
@@ -77,6 +80,18 @@ public class CustomNavMeshAgent : MonoBehaviour
     [SerializeField, Range(-5, 5)] private float baseOffset = 0;
 
     [SerializeField, Range(.1f, 10)] private float speed = 1;
+    public float Speed
+    {
+        get
+        {
+            return speed;
+        }
+        set
+        {
+            if (value >= 0)
+                speed = value;
+        }
+    }
 
     [SerializeField, Range(.1f, 10)] private float detectionRange = 2;
 
@@ -320,6 +335,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         isMoving = false;
         pathState = CalculatingState.Waiting;
         pathIndex = 1;
+        OnAgentStopped?.Invoke(); 
     }
     #endregion
 
