@@ -304,7 +304,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb57aa5f978d98648b38aa26b2f1f864, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  triangles: []
 --- !u!4 &1075867323
 Transform:
   m_ObjectHideFlags: 0
@@ -353,9 +352,10 @@ MonoBehaviour:
   radius: 0.5
   baseOffset: 0
   speed: 2
-  detectionRange: 0.5
+  detectionRange: 0.75
   steerForce: 10
-  avoidanceForce: 2
+  avoidanceForce: 5
+  agentPriority: 1
 --- !u!65 &1080680668
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -567,9 +567,10 @@ MonoBehaviour:
   radius: 0.5
   baseOffset: 0
   speed: 2
-  detectionRange: 0.5
+  detectionRange: 0.75
   steerForce: 10
-  avoidanceForce: 2
+  avoidanceForce: 5
+  agentPriority: 5
 --- !u!65 &1952872620
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -78,6 +78,9 @@ public class CustomNavMeshAgent : MonoBehaviour
     [SerializeField, Range(.1f, 10)] private float steerForce = .1f;
 
     [SerializeField, Range(.1f, 10)] private float avoidanceForce = 2;
+
+    [SerializeField, Range(1, 10)] private int agentPriority = 1; 
+    public int AgentPriority { get { return agentPriority;  } }
     #endregion
 
     #endregion
@@ -134,12 +137,13 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// Apply the avoidance force to the velocity
     /// Avoidance force is equal to the direction from the center position of the obstacle to the hit point of the ray cast
     /// </summary>
-    /// <param name="_targetedPosition">Direction from the center position of the obstacle to the hit point of the ray cast</param>
-    public void Avoid(Vector3 _targetedPosition)
+    /// <param name="_direction">Direction from the center position of the obstacle to the hit point of the ray cast</param>
+    public void Avoid(Vector3 _direction)
     {
-        Vector3 _desiredVelocity = (_targetedPosition - OffsetPosition).normalized * speed;
-        Vector3 _avoidance = ((_desiredVelocity - velocity) * avoidanceForce * Time.deltaTime);
+        _direction.Normalize(); 
+        Vector3 _avoidance = _direction * avoidanceForce * Time.deltaTime;
         velocity += _avoidance;
+        velocity = Vector3.ClampMagnitude(velocity, speed); 
     }
 
     /// <summary>
@@ -195,6 +199,8 @@ public class CustomNavMeshAgent : MonoBehaviour
         // Magnitude of the normal from the dir b reaching the predicted location
         float _distance = 0;
 
+        CustomNavMeshAgent[] _agents; 
+
         /* First the velocity is equal to the normalized direction from the agent position to the next position */
         if (velocity == Vector3.zero)
             velocity = transform.forward * speed;
@@ -224,20 +230,7 @@ public class CustomNavMeshAgent : MonoBehaviour
                 _nextPosition = _followingPath[pathIndex];
                 continue;
             }
-            Collider[] _coll = Physics.OverlapSphere(CenterPosition, detectionRange).Where(c => c.GetComponent<CustomNavMeshAgent>() && c.gameObject != gameObject).ToArray();
-            if(_coll.Length > 0)
-            {
-                _dir = Vector3.zero;
-                for (int i = 0; i < _coll.Length; i++)
-                {
-                    _dir += (CenterPosition - _coll[i].transform.position); 
-                }
-                Avoid(_dir);
-                //Debug.Log("Avoid"); 
-                yield return new WaitForEndOfFrame();
-                continue; 
-            }
-            
+
             /* Get the predicted Velocity and the Predicted position*/
             _predictedPosition = OffsetPosition + velocity;
              
@@ -262,7 +255,18 @@ public class CustomNavMeshAgent : MonoBehaviour
             {
                 Seek(_targetPosition);
             }
-            /* Check if there is any obstacle in front of the agent*/
+            /* Check if there is any agent near of the agent*/
+            _agents = Physics.OverlapSphere(CenterPosition, detectionRange).Where(c => c.GetComponent<CustomNavMeshAgent>() && c.gameObject != gameObject).Select(c => c.GetComponent<CustomNavMeshAgent>()).ToArray();
+            if (_agents.Length > 0)
+            {
+                _dir = Vector3.zero;
+                for (int i = 0; i < _agents.Length; i++)
+                {
+                    if (agentPriority <= _agents[i].AgentPriority)
+                        _dir += (CenterPosition - _agents[i].transform.position);
+                }
+                Avoid(_dir);
+            }
             yield return new WaitForEndOfFrame();
         }
         StopAgent(); 
@@ -279,6 +283,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         Vector3 _desiredVelocity = (_target - OffsetPosition).normalized * speed;
         Vector3 _steer = ((_desiredVelocity - velocity) * steerForce * Time.deltaTime );
         velocity += _steer;
+        velocity = Vector3.ClampMagnitude(velocity, speed); 
     }
 
     /// <summary>
