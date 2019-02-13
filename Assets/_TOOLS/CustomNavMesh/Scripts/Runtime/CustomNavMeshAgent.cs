@@ -42,11 +42,16 @@ Updated by: Thiebaut Alexis
 Date: 05/02/2019 
 Description: Completing Stop Agent Method
 
-Update n°: 00
+Update n°: 006
 Updated by: Thiebaut Alexis
 Date: 07/02/2019 
 Description: Updating the CheckDestination and SetDestination Methods
                 - When the agent is already moving, stop the coroutine and calculate a new path
+
+Update n°: 007
+Updated by: Thiebaut Alexis
+Date: 13/02/2019 
+Description: Updating the Avoid Method -> Now add the the avoidance direction to the velocity
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
