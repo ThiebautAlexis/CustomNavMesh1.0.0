@@ -65,21 +65,21 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     #region FieldsAndProperty
     #region Inspector
+
     #region Vector3
-    [Header("Agent Settings")]
     [SerializeField] private Vector3 positionOffset;
     #endregion
 
     #region float
-    [SerializeField, Range(.1f, 5)] private float height = 1;
+    [SerializeField, Range(.1f, 5)] protected float height = 1;
     public float Height { get { return height / 2; } }
 
-    [SerializeField, Range(.5f, 2)] private float radius = 1;
+    [SerializeField, Range(.5f, 2)] protected float radius = 1;
     public float Radius { get { return radius * .75f; } }
 
-    [SerializeField, Range(-5, 5)] private float baseOffset = 0;
+    [SerializeField, Range(-5, 5)] protected float baseOffset = 0;
 
-    [SerializeField, Range(.1f, 10)] private float speed = 1;
+    [SerializeField, Range(.1f, 10)] protected float speed = 1;
     public float Speed
     {
         get
@@ -93,13 +93,13 @@ public class CustomNavMeshAgent : MonoBehaviour
         }
     }
 
-    [SerializeField, Range(.1f, 10)] private float detectionRange = 2;
+    [SerializeField, Range(.1f, 10)] protected float detectionRange = 2;
 
-    [SerializeField, Range(.1f, 10)] private float steerForce = .1f;
+    [SerializeField, Range(.1f, 10)] protected float steerForce = .1f;
 
-    [SerializeField, Range(.1f, 10)] private float avoidanceForce = 2;
+    [SerializeField, Range(.1f, 10)] protected float avoidanceForce = 2;
 
-    [SerializeField, Range(1, 10)] private int agentPriority = 1; 
+    [SerializeField, Range(1, 10)] protected int agentPriority = 1; 
     public int AgentPriority { get { return agentPriority;  } }
     #endregion
 
@@ -109,10 +109,6 @@ public class CustomNavMeshAgent : MonoBehaviour
     #region bool
     bool isMoving = false;
     public bool IsMoving { get { return isMoving; } }
-    #endregion
-
-    #region int
-    int pathIndex = 0;
     #endregion
 
     #region Path
@@ -154,19 +150,6 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     #region Methods
     /// <summary>
-    /// Apply the avoidance force to the velocity
-    /// Avoidance force is equal to the direction from the center position of the obstacle to the hit point of the ray cast
-    /// </summary>
-    /// <param name="_direction">Direction from the center position of the obstacle to the hit point of the ray cast</param>
-    public void Avoid(Vector3 _direction)
-    {
-        _direction.Normalize(); 
-        Vector3 _avoidance = _direction * avoidanceForce * Time.deltaTime;
-        velocity += _avoidance;
-        velocity = Vector3.ClampMagnitude(velocity, speed); 
-    }
-
-    /// <summary>
     /// Check if the destination can be reached
     /// </summary>
     /// <param name="_position">destination to reach</param>
@@ -197,7 +180,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         OnMovementStarted?.Invoke(); 
         isMoving = true;
-        pathIndex = 1;
+        int _pathIndex = 1;
         List<Vector3> _followingPath = currentPath.PathPoints;  //List of points in the path
 
         /*STEERING*/
@@ -242,12 +225,12 @@ public class CustomNavMeshAgent : MonoBehaviour
             if (Vector3.Distance(OffsetPosition, _nextPosition) <= radius)
             {
                 //set the new previous position
-                _previousPosition = _followingPath[pathIndex];
+                _previousPosition = _followingPath[_pathIndex];
                 //Increasing path index
-                pathIndex++;
-                if (pathIndex > _followingPath.Count - 1) break;
+                _pathIndex++;
+                if (_pathIndex > _followingPath.Count - 1) break;
                 //Set the new next Position
-                _nextPosition = _followingPath[pathIndex];
+                _nextPosition = _followingPath[_pathIndex];
                 continue;
             }
 
@@ -294,6 +277,19 @@ public class CustomNavMeshAgent : MonoBehaviour
     }
 
     /// <summary>
+    /// Apply the avoidance force to the velocity
+    /// Avoidance force is equal to the direction from the center position of the obstacle to the hit point of the ray cast
+    /// </summary>
+    /// <param name="_direction">Direction from the center position of the obstacle to the hit point of the ray cast</param>
+    void Avoid(Vector3 _direction)
+    {
+        _direction.Normalize();
+        Vector3 _avoidance = _direction * avoidanceForce * Time.deltaTime;
+        velocity += _avoidance;
+        velocity = Vector3.ClampMagnitude(velocity, speed);
+    }
+
+    /// <summary>
     /// Calculate the needed velocity 
     /// Desired velocity - currentVelocity
     /// </summary>
@@ -334,7 +330,6 @@ public class CustomNavMeshAgent : MonoBehaviour
         currentPath.PathPoints.Clear(); 
         isMoving = false;
         pathState = CalculatingState.Waiting;
-        pathIndex = 1;
         OnAgentStopped?.Invoke(); 
     }
     #endregion
@@ -349,7 +344,6 @@ public class CustomNavMeshAgent : MonoBehaviour
         Gizmos.DrawLine(CenterPosition, CenterPosition + velocity );
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(OffsetPosition, .1f);
-        Gizmos.DrawWireSphere(CenterPosition, detectionRange); 
         if (currentPath == null || currentPath.PathPoints == null || currentPath.PathPoints.Count == 0) return;
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
@@ -358,7 +352,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         for (int i = 0; i < currentPath.PathPoints.Count - 1; i++)
         {
             Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]);
-        }   
+        }
     }
 
     private void Update()

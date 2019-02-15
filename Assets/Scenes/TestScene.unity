@@ -285,7 +285,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1075867323}
-  - component: {fileID: 1075867322}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -293,17 +292,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1075867322
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1075867321}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb57aa5f978d98648b38aa26b2f1f864, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1075867323
 Transform:
   m_ObjectHideFlags: 0
@@ -349,10 +337,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   positionOffset: {x: 0, y: 0, z: 0}
   height: 1
-  radius: 0.5
+  radius: 1
   baseOffset: 0
   speed: 2
-  detectionRange: 0.75
+  detectionRange: 1
   steerForce: 10
   avoidanceForce: 5
   agentPriority: 1
@@ -417,7 +405,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1080680666}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.39, y: 0.5, z: 3}
+  m_LocalPosition: {x: -2.447, y: 0.5, z: 3.535}
   m_LocalScale: {x: 0.5, y: 1, z: 0.5}
   m_Children: []
   m_Father: {fileID: 0}
@@ -564,13 +552,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   positionOffset: {x: 0, y: 0, z: 0}
   height: 1
-  radius: 0.5
+  radius: 1
   baseOffset: 0
   speed: 2
-  detectionRange: 0.75
+  detectionRange: 1
   steerForce: 10
   avoidanceForce: 5
-  agentPriority: 5
+  agentPriority: 1
 --- !u!65 &1952872620
 BoxCollider:
   m_ObjectHideFlags: 0

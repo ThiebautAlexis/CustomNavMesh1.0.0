@@ -28,6 +28,4 @@ public class CustomNavPath
     {
         pathPoints = _path;
     }
-
-
 }

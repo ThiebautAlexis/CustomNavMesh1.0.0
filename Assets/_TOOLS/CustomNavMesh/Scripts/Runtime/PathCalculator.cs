@@ -277,17 +277,9 @@ public static class PathCalculator
             }
         }
 
-
-        // Initialise end portal vertices 
-        for (int j = 0; j < _absoluteTrianglePath[_absoluteTrianglePath.Count -1].Vertices.Length; j++)
-        {
-            if (_absoluteTrianglePath[_absoluteTrianglePath.Count - 1].Vertices[j].Position != _leftVertices[_absoluteTrianglePath.Count - 1]
-                && (_absoluteTrianglePath[_absoluteTrianglePath.Count - 1].Vertices[j].Position != _rightVertices[_absoluteTrianglePath.Count - 1]))
-            {
-                _leftVertices[_absoluteTrianglePath.Count] = _absoluteTrianglePath[_absoluteTrianglePath.Count - 1].Vertices[j].Position;
-                _rightVertices[_absoluteTrianglePath.Count] = _absoluteTrianglePath[_absoluteTrianglePath.Count - 1].Vertices[j].Position;
-            }
-        }
+        // Initialise end portal vertices -> Close the funnel
+        _leftVertices[_absoluteTrianglePath.Count] = _destination;
+        _rightVertices[_absoluteTrianglePath.Count] = _destination;
         #endregion
 
         //Step through the channel
