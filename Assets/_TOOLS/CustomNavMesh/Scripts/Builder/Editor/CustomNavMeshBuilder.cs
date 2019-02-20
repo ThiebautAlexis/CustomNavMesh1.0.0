@@ -39,7 +39,7 @@ public class CustomNavMeshBuilder : EditorWindow
 
     private List<Vertex> navPoints = new List<Vertex>();
 
-    private string SavingDirectory { get { return Application.dataPath + "/CustomNavDatas"; } }
+    private string SavingDirectory { get { return Application.dataPath + "/Resources/CustomNavDatas"; } }
 
     #endregion
 
@@ -201,7 +201,7 @@ public class CustomNavMeshBuilder : EditorWindow
         CustomNavDataSaver<CustomNavData> _navDataSaver = new CustomNavDataSaver<CustomNavData>();
         CustomNavData _dataSaved = new CustomNavData();
         _dataSaved.TrianglesInfos = triangles;
-        _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved, ".bin");
+        _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved, ".txt");
     }
     #endregion
     #endregion

@@ -254,7 +254,7 @@ public class CustomNavMeshAgent : MonoBehaviour
             * If the distance is greater than the radius, it has to steer to get closer
             */
             _distance = Vector3.Distance(_predictedPosition, _normalPoint);
-            if (_distance > radius)
+            if (_distance > radius/2)
             {
                 Seek(_targetPosition);
             }
@@ -285,6 +285,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         _direction.Normalize();
         Vector3 _avoidance = _direction * avoidanceForce * Time.deltaTime;
+        _avoidance.y = 0; 
         velocity += _avoidance;
         velocity = Vector3.ClampMagnitude(velocity, speed);
     }
@@ -354,18 +355,18 @@ public class CustomNavMeshAgent : MonoBehaviour
             Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]);
         }
     }
-
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Mouse0))
+        if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            RaycastHit _hit; 
-            if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hit))
+            RaycastHit _hit;
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hit))
             {
-                CheckDestination(_hit.point); 
+                CheckDestination(_hit.point);
             }
         }
     }
+
     #endregion
 }
 public enum CalculatingState

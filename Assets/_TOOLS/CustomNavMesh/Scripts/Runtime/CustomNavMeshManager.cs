@@ -36,19 +36,20 @@ public class CustomNavMeshManager
     [SerializeField]private static List<Triangle> triangles = new List<Triangle>();
     public static List<Triangle> Triangles { get { return triangles; }  }
 
-    private static string DirectoryPath { get { return Application.dataPath + "/CustomNavDatas"; } }
+    private static string ResourcesPath { get { return "CustomNavDatas"; } }
     #endregion
 
     #region Methods
     /// <summary>
-    /// Get the datas from the dataPath folder to get the navpoints and the triangles
+    /// Get the datas from the resources folder to get the navpoints and the triangles
     /// </summary>
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void LoadDatas()
     {
+        string _fileName = $"CustomNavData_{SceneManager.GetActiveScene().name}";
+        TextAsset _textDatas = Resources.Load(Path.Combine(ResourcesPath, _fileName), typeof(TextAsset)) as TextAsset;
         CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
-        string _sceneName = SceneManager.GetActiveScene().name;
-        CustomNavData _datas = _loader.LoadFile(DirectoryPath, _sceneName);
+        CustomNavData _datas = _loader.DeserializeFileFromTextAsset(_textDatas);
         triangles = _datas.TrianglesInfos;
     }
     #endregion

@@ -87,4 +87,19 @@ public class CustomNavDataSaver<T>
         _toRead.Close();
         return _object;
     }
+
+    /// <summary>
+    /// Deserialize a text asset to get a serilisable object T
+    /// </summary>
+    /// <param name="_textAsset">textAsset to deserialize</param>
+    /// <returns>Serialisable object T</returns>
+    public T DeserializeFileFromTextAsset(TextAsset _textAsset)
+    {
+        IFormatter _format = new BinaryFormatter();
+        MemoryStream _toDeserialize = new MemoryStream(_textAsset.bytes);
+        T _object = (T)_format.Deserialize(_toDeserialize);
+        _toDeserialize.Close();
+        return _object; 
+
+    }
 }
