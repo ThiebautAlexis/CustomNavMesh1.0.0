@@ -362,7 +362,10 @@ public class CustomNavMeshAgent : MonoBehaviour
             RaycastHit _hit;
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hit))
             {
-                CheckDestination(_hit.point);
+                float _randomX = UnityEngine.Random.Range(-.5f, .5f);
+                float _randomZ = UnityEngine.Random.Range(-.5f, .5f);
+                Vector3 _destination = _hit.point + new Vector3(_randomX, 0, _randomZ); 
+                CheckDestination(_destination);
             }
         }
     }
