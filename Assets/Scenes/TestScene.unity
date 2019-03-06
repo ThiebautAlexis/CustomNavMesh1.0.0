@@ -340,7 +340,7 @@ MonoBehaviour:
   radius: 1
   baseOffset: 0
   speed: 2
-  detectionRange: 1
+  avoidanceRange: 0.75
   steerForce: 10
   avoidanceForce: 5
   agentPriority: 1
@@ -555,7 +555,7 @@ MonoBehaviour:
   radius: 1
   baseOffset: 0
   speed: 2
-  detectionRange: 1
+  avoidanceRange: 0.75
   steerForce: 10
   avoidanceForce: 5
   agentPriority: 1

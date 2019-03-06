@@ -93,7 +93,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         }
     }
 
-    [SerializeField, Range(.1f, 10)] protected float detectionRange = 2;
+    [SerializeField, Range(.1f, 10)] protected float avoidanceRange = 2;
 
     [SerializeField, Range(.1f, 10)] protected float steerForce = .1f;
 
@@ -156,6 +156,12 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <returns>if the destination can be reached</returns>
     public bool CheckDestination(Vector3 _position)
     {
+        if(CustomNavMeshManager.Triangles == null || CustomNavMeshManager.Triangles.Count == 0)
+        {
+            Debug.LogError("Triangles Not found. Must build the navmesh for the scene");
+            Destroy(this);
+            return false; 
+        }
         if(isMoving)
         {
             StopAllCoroutines(); 
@@ -259,7 +265,7 @@ public class CustomNavMeshAgent : MonoBehaviour
                 Seek(_targetPosition);
             }
             /* Check if there is any agent near of the agent*/
-            _agents = Physics.OverlapSphere(CenterPosition, detectionRange).Where(c => c.GetComponent<CustomNavMeshAgent>() && c.gameObject != gameObject).Select(c => c.GetComponent<CustomNavMeshAgent>()).ToArray();
+            _agents = Physics.OverlapSphere(CenterPosition, avoidanceRange).Where(c => c.GetComponent<CustomNavMeshAgent>() && c.gameObject != gameObject).Select(c => c.GetComponent<CustomNavMeshAgent>()).ToArray();
             if (_agents.Length > 0)
             {
                 _dir = Vector3.zero;
@@ -309,7 +315,13 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <param name="_position">destination to reach</param>
     public void SetDestination(Vector3 _position)
     {
-        if(isMoving)
+        if (CustomNavMeshManager.Triangles == null || CustomNavMeshManager.Triangles.Count == 0)
+        {
+            Debug.LogError("Triangles Not found. Must build the navmesh for the scene");
+            Destroy(this);
+            return;
+        }
+        if (isMoving)
         {
             StopAllCoroutines();
         }

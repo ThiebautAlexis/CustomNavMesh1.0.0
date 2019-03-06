@@ -370,6 +370,8 @@ public static class PathCalculator
 
         _simplifiedPath.Add(_destination);
         //Set the simplifiedPath
+        //_path.SetPath(_absoluteTrianglePath.Select(t => t.CenterPosition).ToList());
+
         _path.SetPath(_simplifiedPath);
     }
     #endregion

@@ -48,6 +48,11 @@ public class CustomNavMeshManager
     {
         string _fileName = $"CustomNavData_{SceneManager.GetActiveScene().name}";
         TextAsset _textDatas = Resources.Load(Path.Combine(ResourcesPath, _fileName), typeof(TextAsset)) as TextAsset;
+        if(_textDatas == null)
+        {
+            Debug.LogError($"{_fileName} not found.");
+            return; 
+        }
         CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
         CustomNavData _datas = _loader.DeserializeFileFromTextAsset(_textDatas);
         triangles = _datas.TrianglesInfos;

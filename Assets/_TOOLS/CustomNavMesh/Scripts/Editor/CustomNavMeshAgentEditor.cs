@@ -59,13 +59,13 @@ public class CustomNavMeshAgentEditor : Editor
     SerializedProperty baseOffset = null;
     /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.height"/></summary> of type <see cref="float"/>
     SerializedProperty speed = null;
-    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.height"/></summary> of type <see cref="float"/>
-    SerializedProperty detectionRange = null;
-    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.height"/></summary> of type <see cref="float"/>
+    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.avoidanceRange"/></summary> of type <see cref="float"/>
+    SerializedProperty avoidanceRange = null;
+    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.steerForce"/></summary> of type <see cref="float"/>
     SerializedProperty steerForce = null;
-    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.height"/></summary> of type <see cref="float"/>
+    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.avoidanceForce"/></summary> of type <see cref="float"/>
     SerializedProperty avoidanceForce = null;
-    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.height"/></summary> of type <see cref="float"/>
+    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.agentPriority"/></summary> of type <see cref="float"/>
     SerializedProperty agentPriority = null;
     #endregion
 
@@ -113,7 +113,7 @@ public class CustomNavMeshAgentEditor : Editor
         GUILayout.Space(10);
         _headerStyle.fontSize = 12;
 
-        EditorGUILayout.LabelField("DETECTION SETTINGS", _headerStyle);
+        EditorGUILayout.LabelField("GENERAL SETTINGS", _headerStyle);
         EditorGUILayout.PropertyField(positionOffset); 
         EditorGUILayout.PropertyField(height);
         EditorGUILayout.PropertyField(radius);
@@ -121,18 +121,16 @@ public class CustomNavMeshAgentEditor : Editor
 
         EditorGUILayout.Separator();
 
-        EditorGUILayout.LabelField("DETECTION SETTINGS", _headerStyle);
-        EditorGUILayout.PropertyField(detectionRange);
-
-        EditorGUILayout.Separator();
-
         EditorGUILayout.LabelField("MOVEMENTS SETTINGS", _headerStyle);
         EditorGUILayout.PropertyField(speed);
         EditorGUILayout.PropertyField(steerForce);
+
+        EditorGUILayout.Separator();
+
+        EditorGUILayout.LabelField("AVOIDANCE SETTINGS", _headerStyle);
+        EditorGUILayout.PropertyField(avoidanceRange);
         EditorGUILayout.PropertyField(avoidanceForce);
         EditorGUILayout.PropertyField(agentPriority);
-
-
 
         serializedObject.ApplyModifiedProperties(); 
         EditorGUILayout.EndVertical();
@@ -150,7 +148,7 @@ public class CustomNavMeshAgentEditor : Editor
         radius = serializedObject.FindProperty("radius");
         baseOffset = serializedObject.FindProperty("baseOffset");
         speed = serializedObject.FindProperty("speed");
-        detectionRange = serializedObject.FindProperty("detectionRange");
+        avoidanceRange = serializedObject.FindProperty("avoidanceRange");
         steerForce = serializedObject.FindProperty("steerForce");
         avoidanceForce = serializedObject.FindProperty("avoidanceForce");
         agentPriority = serializedObject.FindProperty("agentPriority");
@@ -160,7 +158,7 @@ public class CustomNavMeshAgentEditor : Editor
     {
         DrawWireCylinder((serializedObject.targetObject as CustomNavMeshAgent).CenterPosition, radius.floatValue/2, height.floatValue/2, Color.green);
         Handles.color = Color.red; 
-        Handles.DrawWireDisc((serializedObject.targetObject as CustomNavMeshAgent).CenterPosition, Vector3.up, detectionRange.floatValue); 
+        Handles.DrawWireDisc((serializedObject.targetObject as CustomNavMeshAgent).CenterPosition, Vector3.up, avoidanceRange.floatValue); 
     }
     #endregion
 
