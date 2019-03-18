@@ -79,7 +79,9 @@ public class CustomNavMeshAgent : MonoBehaviour
 
     [SerializeField, Range(-5, 5)] protected float baseOffset = 0;
 
-    [SerializeField, Range(20, 180)] protected float detectionFieldOfView = 90; 
+    [SerializeField, Range(20, 180)] protected float detectionFieldOfView = 90;
+
+    [SerializeField, Range(1, 10)] protected float detectionRange = 5;
 
     [SerializeField, Range(.1f, 5)] protected float height = 1;
     public float Height { get { return height / 2; } }
@@ -402,7 +404,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         if (fieldOfView == null ||  fieldOfView.Length == 0) return; 
         for (int i = 0; i < fieldOfView.Length; i++)
         {
-            Gizmos.DrawRay(CenterPosition, CenterPosition + fieldOfView[i]);
+            Gizmos.DrawRay(CenterPosition, fieldOfView[i] * detectionRange);
         }
         if (currentPath == null || currentPath.PathPoints == null || currentPath.PathPoints.Count == 0) return;
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
