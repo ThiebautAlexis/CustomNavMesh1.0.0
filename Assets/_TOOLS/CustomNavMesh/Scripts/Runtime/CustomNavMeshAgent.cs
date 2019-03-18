@@ -60,10 +60,12 @@ public class CustomNavMeshAgent : MonoBehaviour
     #region Events
     public event Action OnMovementStarted; 
     public event Action OnDestinationReached;
-    public event Action OnAgentStopped; 
+    public event Action OnAgentStopped;
     #endregion
 
     #region FieldsAndProperty
+    [SerializeField] KeyCode key; 
+
     #region Inspector
 
     #region Vector3
@@ -71,13 +73,19 @@ public class CustomNavMeshAgent : MonoBehaviour
     #endregion
 
     #region float
+    [SerializeField, Range(.1f, 10)] protected float avoidanceForce = 2;
+
+    [SerializeField, Range(.1f, 10)] protected float avoidanceRange = 2;
+
+    [SerializeField, Range(-5, 5)] protected float baseOffset = 0;
+
+    [SerializeField, Range(20, 180)] protected float detectionFieldOfView = 90; 
+
     [SerializeField, Range(.1f, 5)] protected float height = 1;
     public float Height { get { return height / 2; } }
 
     [SerializeField, Range(.5f, 2)] protected float radius = 1;
     public float Radius { get { return radius * .75f; } }
-
-    [SerializeField, Range(-5, 5)] protected float baseOffset = 0;
 
     [SerializeField, Range(.1f, 10)] protected float speed = 1;
     public float Speed
@@ -93,16 +101,15 @@ public class CustomNavMeshAgent : MonoBehaviour
         }
     }
 
-    [SerializeField, Range(.1f, 10)] protected float avoidanceRange = 2;
-
     [SerializeField, Range(.1f, 10)] protected float steerForce = .1f;
-
-    [SerializeField, Range(.1f, 10)] protected float avoidanceForce = 2;
-
-    [SerializeField, Range(1, 10)] protected int agentPriority = 1; 
-    public int AgentPriority { get { return agentPriority;  } }
     #endregion
 
+    #region Int
+    [SerializeField, Range(1, 10)] protected int agentPriority = 1;
+    public int AgentPriority { get { return agentPriority; } }
+
+    [SerializeField, Range(3, 10)] protected int detectionAccuracy = 3;
+    #endregion
     #endregion
 
     #region Other Fields and properties
@@ -145,10 +152,29 @@ public class CustomNavMeshAgent : MonoBehaviour
     private Vector3 velocity; 
     public Vector3 Velocity { get { return velocity;} }
     #endregion
+
+    #region Vector3[]
+    private Vector3[] fieldOfView = null; 
+    #endregion
     #endregion
     #endregion
 
     #region Methods
+
+    /// <summary>
+    /// Apply the avoidance force to the velocity
+    /// Avoidance force is equal to the direction from the center position of the obstacle to the hit point of the ray cast
+    /// </summary>
+    /// <param name="_direction">Direction from the center position of the obstacle to the hit point of the ray cast</param>
+    private void Avoid(Vector3 _direction)
+    {
+        _direction.Normalize();
+        Vector3 _avoidance = _direction * avoidanceForce * Time.deltaTime;
+        _avoidance.y = 0;
+        velocity += _avoidance;
+        velocity = Vector3.ClampMagnitude(velocity, speed);
+    }
+
     /// <summary>
     /// Check if the destination can be reached
     /// </summary>
@@ -208,7 +234,9 @@ public class CustomNavMeshAgent : MonoBehaviour
         // Magnitude of the normal from the dir b reaching the predicted location
         float _distance = 0;
 
-        CustomNavMeshAgent[] _agents; 
+        CustomNavMeshAgent[] _agents;
+        List<Vector3> _obstacles = null;
+        RaycastHit _hitInfo; 
 
         /* First the velocity is equal to the normalized direction from the agent position to the next position */
         if (velocity == Vector3.zero)
@@ -240,6 +268,29 @@ public class CustomNavMeshAgent : MonoBehaviour
                 continue;
             }
 
+            _obstacles = new List<Vector3>();
+
+            for (int i = 0; i < fieldOfView.Length; i++)
+            {
+
+            }
+
+           /* Check if there is any agent near of the agent*/
+           _agents = Physics.OverlapSphere(CenterPosition, avoidanceRange).Where(c => c.GetComponent<CustomNavMeshAgent>() && c.gameObject != gameObject).Select(c => c.GetComponent<CustomNavMeshAgent>()).ToArray();
+            if (_agents.Length > 0)
+            {
+                _dir = Vector3.zero;
+                for (int i = 0; i < _agents.Length; i++)
+                {
+                    if (agentPriority <= _agents[i].AgentPriority)
+                        _dir += (CenterPosition - _agents[i].transform.position);
+                }
+                Avoid(_dir);
+                yield return new WaitForEndOfFrame();
+                continue; 
+            }
+
+
             /* Get the predicted Velocity and the Predicted position*/
             _predictedPosition = OffsetPosition + velocity;
              
@@ -264,44 +315,34 @@ public class CustomNavMeshAgent : MonoBehaviour
             {
                 Seek(_targetPosition);
             }
-            /* Check if there is any agent near of the agent*/
-            _agents = Physics.OverlapSphere(CenterPosition, avoidanceRange).Where(c => c.GetComponent<CustomNavMeshAgent>() && c.gameObject != gameObject).Select(c => c.GetComponent<CustomNavMeshAgent>()).ToArray();
-            if (_agents.Length > 0)
-            {
-                _dir = Vector3.zero;
-                for (int i = 0; i < _agents.Length; i++)
-                {
-                    if (agentPriority <= _agents[i].AgentPriority)
-                        _dir += (CenterPosition - _agents[i].transform.position);
-                }
-                Avoid(_dir);
-            }
             yield return new WaitForEndOfFrame();
         }
         StopAgent(); 
         OnDestinationReached?.Invoke();
     }
 
-    /// <summary>
-    /// Apply the avoidance force to the velocity
-    /// Avoidance force is equal to the direction from the center position of the obstacle to the hit point of the ray cast
-    /// </summary>
-    /// <param name="_direction">Direction from the center position of the obstacle to the hit point of the ray cast</param>
-    void Avoid(Vector3 _direction)
+    private void GenerateFieldOfView()
     {
-        _direction.Normalize();
-        Vector3 _avoidance = _direction * avoidanceForce * Time.deltaTime;
-        _avoidance.y = 0; 
-        velocity += _avoidance;
-        velocity = Vector3.ClampMagnitude(velocity, speed);
+        fieldOfView = new Vector3[detectionAccuracy];
+        float _angle = - (detectionFieldOfView / 2);
+        float _offset = detectionFieldOfView / detectionAccuracy; 
+        Vector3 _point; 
+        for (int i = 0; i < detectionAccuracy; i++)
+        {
+            // VERIF LES COORDONNEES DU VECTEUR
+            _point = new Vector3(Mathf.Cos(_angle * Mathf.Deg2Rad), 0, Mathf.Sin(_angle * Mathf.Deg2Rad)).normalized;
+            fieldOfView[i] = _point;
+            _angle += _offset;
+        }
     }
+
 
     /// <summary>
     /// Calculate the needed velocity 
     /// Desired velocity - currentVelocity
     /// </summary>
     /// <param name="_target"></param>
-    void Seek(Vector3 _target)
+    private void Seek(Vector3 _target)
     {
         Vector3 _desiredVelocity = (_target - OffsetPosition).normalized * speed;
         Vector3 _steer = ((_desiredVelocity - velocity) * steerForce * Time.deltaTime );
@@ -350,6 +391,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     #region UnityMethods
     private void OnDrawGizmos()
     {
+        
         Gizmos.color = Color.blue;
         Gizmos.DrawSphere(CenterPosition, .1f); 
         Gizmos.color = Color.cyan;
@@ -357,6 +399,11 @@ public class CustomNavMeshAgent : MonoBehaviour
         Gizmos.DrawLine(CenterPosition, CenterPosition + velocity );
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(OffsetPosition, .1f);
+        if (fieldOfView == null ||  fieldOfView.Length == 0) return; 
+        for (int i = 0; i < fieldOfView.Length; i++)
+        {
+            Gizmos.DrawRay(CenterPosition, CenterPosition + fieldOfView[i]);
+        }
         if (currentPath == null || currentPath.PathPoints == null || currentPath.PathPoints.Count == 0) return;
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
@@ -366,10 +413,15 @@ public class CustomNavMeshAgent : MonoBehaviour
         {
             Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]);
         }
+
+    }
+    private void Start()
+    {
+        GenerateFieldOfView(); 
     }
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        if (Input.GetKeyDown(key))
         {
             RaycastHit _hit;
             if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hit))
@@ -381,7 +433,7 @@ public class CustomNavMeshAgent : MonoBehaviour
             }
         }
     }
-
+   
     #endregion
 }
 public enum CalculatingState
