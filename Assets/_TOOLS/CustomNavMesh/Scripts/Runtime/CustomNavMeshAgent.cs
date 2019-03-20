@@ -57,12 +57,15 @@ Description: Updating the Avoid Method -> Now add the the avoidance direction to
 
 Update n°: 008
 Updated by: Thiebaut Alexis
-Date: 13/02/2019 
+Date: 19/03/2019 
 Description: Implementing the detection and the avoidance behaviours
              > Detection Behaviour cast multiple rays in direction of the velocity and get the obstacles touched by the rays
              > Avoid Behaviour use the obstacle get from the detection and avoid them
              
-             
+Update n°: 009
+Updated by: Thiebaut Alexis
+Date: 13/02/2019 
+Description: Implementing layer mask to exclude certain layers from being detected and avoided
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
@@ -118,8 +121,9 @@ public class CustomNavMeshAgent : MonoBehaviour
     [SerializeField, Range(3, 10)] protected int detectionAccuracy = 3;
 
     [SerializeField, Range(20, 180)] protected int detectionFieldOfView = 90;
-
     #endregion
+
+    [SerializeField] private LayerMask avoidanceLayer; 
     #endregion
 
     #region Other Fields and properties
@@ -294,7 +298,7 @@ public class CustomNavMeshAgent : MonoBehaviour
                     0, 
                     Mathf.Cos(_theta * Mathf.Deg2Rad) * fieldOfView[i].z - Mathf.Sin(_theta * Mathf.Deg2Rad) * fieldOfView[i].x)); 
                 //Cast the ray
-                if(Physics.Raycast(_ray , out _hitInfo, detectionRange))
+                if(Physics.Raycast(_ray , out _hitInfo, detectionRange, avoidanceLayer.value))
                 {
                     //If the hit object isn't a navsurface's child 
                     if (!_hitInfo.transform.GetComponentInParent<NavMeshSurface>())
@@ -442,11 +446,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     private void Start()
     {
         GenerateFieldOfView(); 
-    }
-    private void Update()
-    {
-    }
-   
+    }   
     #endregion
 }
 public enum CalculatingState

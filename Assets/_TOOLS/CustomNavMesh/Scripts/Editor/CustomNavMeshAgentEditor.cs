@@ -13,11 +13,19 @@ Description: Editor of the Agent
 
 ///
 [UPDATES]
+
 Update n°: 001
 Updated by: Thiebaut Alexis
 Date: 14/01/2019
 Description: - Creating the method DrawWireCylinder that can draw the height and the radius of the agent
              - Call the method in OnSceneGUI() method 
+
+------------------------------------------
+
+Update n°: 002
+Updated by: Thiebaut Alexis
+Date: 19/03/2019
+Description: Adding Editor for the avoidance and detection properties
 */
 
 [CustomEditor(typeof(CustomNavMeshAgent))]
@@ -82,6 +90,8 @@ public class CustomNavMeshAgentEditor : Editor
     SerializedProperty detectionFieldOfView = null;
     /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.detectionRange"/></summary> of type <see cref="float"/>
     SerializedProperty detectionRange = null;
+    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.avoidanceLayer"/></summary> of type <see cref="float"/>
+    SerializedProperty avoidanceLayer = null;
     #endregion
 
     Vector3 centerPosition = Vector3.zero; 
@@ -169,6 +179,8 @@ public class CustomNavMeshAgentEditor : Editor
         EditorGUILayout.PropertyField(avoidanceForce);
         EditorGUILayout.PropertyField(agentPriority);
 
+        EditorGUILayout.PropertyField(avoidanceLayer); 
+
         serializedObject.ApplyModifiedProperties(); 
         EditorGUILayout.EndVertical();
     }
@@ -191,6 +203,7 @@ public class CustomNavMeshAgentEditor : Editor
         detectionAccuracy = serializedObject.FindProperty("detectionAccuracy");
         detectionFieldOfView = serializedObject.FindProperty("detectionFieldOfView");
         detectionRange = serializedObject.FindProperty("detectionRange");
+        avoidanceLayer = serializedObject.FindProperty("avoidanceLayer"); 
     }
 
     private void OnSceneGUI()
