@@ -369,14 +369,17 @@ MonoBehaviour:
   positionOffset: {x: 0, y: 0, z: 0}
   avoidanceForce: 10
   baseOffset: 0
-  detectionRange: 2
+  detectionRange: 1.5
   height: 1
   radius: 0.75
   speed: 2
   steerForce: 10
   agentPriority: 1
-  detectionAccuracy: 10
+  detectionAccuracy: 5
   detectionFieldOfView: 115
+  avoidanceLayer:
+    serializedVersion: 2
+    m_Bits: 1
 --- !u!65 &435256855
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -614,6 +617,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1075867323}
+  - component: {fileID: 1075867322}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -621,6 +625,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1075867322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1075867321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed2ee1f27c934c4489b621b74f3c589e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agent: {fileID: 435256854}
 --- !u!4 &1075867323
 Transform:
   m_ObjectHideFlags: 0
@@ -862,7 +878,7 @@ Transform:
   m_GameObject: {fileID: 1638826999}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.5, z: -1.8}
-  m_LocalScale: {x: 0.9103759, y: 1, z: 2.8089354}
+  m_LocalScale: {x: 0.9103759, y: 1, z: 1.3041302}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 5
