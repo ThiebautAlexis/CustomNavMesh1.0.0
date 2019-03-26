@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random; 
+using Random = UnityEngine.Random;
 
 /*
 [Script Header] TDS_Triangle Version 0.0.1
@@ -20,6 +20,12 @@ Date: 21/11/2018
 Description: Initialisation of the class
              - Initialisation of the vertices, the center position, and the constructor
              - Giving an heuristic priority
+
+Update n°: 002
+Updated by: Thiebaut Alexis
+Date: 26/03/2019
+Description: Try adding weight to the triangle
+                -> Search obstacle in the triangle and add weight when an obstacle is found
 */
 [Serializable]
 public class Triangle
@@ -49,7 +55,7 @@ public class Triangle
     {
         get
         {
-            return heuristicPriority = HeuristicCostFromStart + HeuristicCostToDestination;
+            return heuristicPriority; 
         }
         set
         {
@@ -61,19 +67,56 @@ public class Triangle
     public float HeuristicCostFromStart { get; set; }
     public float HeuristicCostToDestination { get; set; }
 
+    private int weight = 0;
+    public int Weight
+    {
+        get { return weight;  }
+    }
+
+    private float surface; 
     #endregion
 
-    #region Constructor
+    #region Constructor 
     public Triangle(Vertex[] _vertices)
     {
         for (int i = 0; i < 3; i++)
         {
             vertices[i] =_vertices[i];
         }
+        float _a = Vector3.Distance(vertices[0].Position, vertices[1].Position);
+        float _b = Vector3.Distance(vertices[1].Position, vertices[2].Position);
+        float _c = Vector3.Distance(vertices[2].Position, vertices[0].Position); 
+        float _p = ( _a + _b  + _c )/2;
+        surface = Mathf.Sqrt(_p * (_p - _a) * (_p - _b) * (_p - _c)); 
     }
     #endregion
 
     #region Methods
+    /*
+    /// <summary>
+    /// Update the weight of the triangle
+    /// Cast lines between the edges and the center of the triangle in order to detect obstacles
+    /// If so, add weight to the triangle
+    /// </summary>
+    public void UpdateWeight()
+    {
+        weight = 0;
+        RaycastHit _hitInfo;
+        float _surface; 
+        for (int i = 0; i < 3; i++)
+        {
+            if(Physics.Linecast(vertices[i].Position, CenterPosition, out _hitInfo))
+            {
+                _surface = _hitInfo.collider.transform.lossyScale.x * _hitInfo.collider.transform.lossyScale.y;
+                //Ajouter le rapport surface de l'obstacle sur surface du triangle au poids
+                int _percentage = (int)Mathf.Clamp( ((100 * _surface) / surface)/3, 0, 100);
+                Debug.Log(_percentage);
+                if (_percentage == 100) return; 
+                //weight += ;
+            }
+        }
+    }
+    */
     #endregion
 }
 

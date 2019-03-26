@@ -119,7 +119,7 @@ public static class PathCalculator
                         // Set the heuristic cost from start for the linked point
                         _linkedTriangle.HeuristicCostFromStart = _cost;
                         //Its heuristic cost is equal to its cost from start plus the heuristic cost between the point and the destination
-                        _linkedTriangle.HeuristicPriority = HeuristicCost(_linkedTriangle, _targetedTriangle) + _cost;
+                        _linkedTriangle.HeuristicPriority = HeuristicCost(_linkedTriangle, _targetedTriangle) + _cost + _linkedTriangle.Weight;
                         //Set the point selected and add it to the open and closed list
                         _linkedTriangle.HasBeenSelected = true;
                         _openList.Add(_linkedTriangle);
