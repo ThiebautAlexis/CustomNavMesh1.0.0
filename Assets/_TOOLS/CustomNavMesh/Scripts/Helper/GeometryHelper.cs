@@ -87,9 +87,6 @@ public static class GeometryHelper
             //  k =    -(     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
             float _k = -((_cd.z * _a.x) - (_cd.z * _c.x) - (_cd.x * _a.z) + ( _cd.x * _c.z)) / _denominator; 
 
-            Debug.Log(_k);
-            Debug.Log(_m);
-
             if(_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1)
             {
                 _intersection = _c + _m * _cd; 
@@ -109,6 +106,18 @@ public static class GeometryHelper
     {
         Barycentric _barycentric = new Barycentric(_triangle.Vertices[0].Position, _triangle.Vertices[1].Position, _triangle.Vertices[2].Position, _position);
         return _barycentric.IsInside;
+    }
+
+    public static bool IsInAnyTriangle(Vector3 _position, List<Triangle> _triangles)
+    {
+        for (int i = 0; i < _triangles.Count; i++)
+        {
+            if(IsInTriangle(_position, _triangles[i]))
+            {
+                return true; 
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -203,16 +212,34 @@ public static class GeometryHelper
     public static Vector3 GetClosestPosition(Vector3 _position, List<Triangle> _triangles)
     {
         RaycastHit _hit;
+        Vector3 _groundedPosition = _position; 
         if (Physics.Raycast(new Ray(_position, Vector3.down), out _hit))
         {
-            return _hit.point;
+            _groundedPosition = _hit.point;
+        }
+        if (IsInAnyTriangle(_groundedPosition, _triangles))
+        {
+            Debug.Log("Return HitPoint");
+            return _groundedPosition; 
         }
         //Get the closest triangle
         Triangle _triangle = GetTriangleContainingPosition(_position, _triangles);
         //Get the closest point from position into the triangle 
-        Vector3 _closestPosition = Vector3.zero;
-
-        return _closestPosition;
+        for (int i = 0; i < 2; i++)
+        {
+            if (IsIntersecting(_triangle.Vertices[i].Position, _triangle.Vertices[i + 1].Position, _triangle.CenterPosition, _position, out _groundedPosition))
+            {
+                Debug.Log("Return intersection");
+                return _groundedPosition;
+            }
+        }
+        if (IsIntersecting(_triangle.Vertices[0].Position, _triangle.Vertices[2].Position, _triangle.CenterPosition, _position, out _groundedPosition))
+        {
+            Debug.Log("Return intersection");
+            return _groundedPosition;
+        }
+        Debug.Log("Def"); 
+        return _triangle.CenterPosition;
     }
 
 
