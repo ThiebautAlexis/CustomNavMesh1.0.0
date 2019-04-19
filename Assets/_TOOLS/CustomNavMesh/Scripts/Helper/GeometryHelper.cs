@@ -70,7 +70,7 @@ public static class GeometryHelper
     public static bool IsIntersecting(Vector3 _a, Vector3 _b, Vector3 _c, Vector3 _d, out Vector3 _intersection)
     {
         Vector3 _ab = _b - _a; // I
-        Vector3 _cd = _d - _a; // J
+        Vector3 _cd = _d - _c; // J
 
         // P -> Intersection point 
         // P = _a + k * _ab = _c + m * _cd
@@ -81,18 +81,18 @@ public static class GeometryHelper
         float _denominator = _ab.magnitude * _cd.magnitude * (Mathf.Sin(Vector3.Angle(_ab, _cd) * Mathf.Deg2Rad));
         if (_denominator != 0)
         {
+            //  m =    -(     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
+            float _m = -((-_ab.x * _a.z) + (_ab.x * _c.z) + (_ab.z * _a.x) - (_ab.z * _c.x)) / _denominator;
 
-            // m = -(-_ab.x * _a.y + _ab.x * _c.y + _ab.y * _a.x - _ab.y * _c.x) / _denominator
-            float _m = -(-_ab.x * _a.y + _ab.x * _c.y + _ab.y * _a.x - _ab.y * _c.x) / _denominator;
-            // k = -(_a.x * _cd.y - _cx * _cd.y - _cd.x * _a.y + _cd.x * _c.y) / _denominator
-            float _k = -(_a.x * _cd.y - _c.x * _cd.y - _cd.x * _a.y + _cd.x * _c.y) / _denominator; 
+            //  k =    -(     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
+            float _k = -((_cd.z * _a.x) - (_cd.z * _c.x) - (_cd.x * _a.z) + ( _cd.x * _c.z)) / _denominator; 
 
             Debug.Log(_k);
             Debug.Log(_m);
 
             if(_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1)
             {
-                _intersection = _a + _k * _ab;
+                _intersection = _c + _m * _cd; 
                 return true; 
             }
         }
