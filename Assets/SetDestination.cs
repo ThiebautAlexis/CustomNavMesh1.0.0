@@ -9,15 +9,21 @@ public class SetDestination : MonoBehaviour
 
 	
 	// Update is called once per frame
-	void Update ()
+	void Start ()
     {
-		if(Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            RaycastHit _hitInfo; 
-            if(Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hitInfo))
-            {
-                agent.SetDestination(_hitInfo.point); 
-            }
-        }
+        StartCoroutine(DestinationSetter()); 
 	}
+
+    IEnumerator DestinationSetter()
+    {
+        while (true)
+        {
+            RaycastHit _hitInfo;
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out _hitInfo))
+            {
+                agent.SetDestination(_hitInfo.point);
+            }
+            yield return new WaitForSeconds(.1f); 
+        }
+    }
 }
