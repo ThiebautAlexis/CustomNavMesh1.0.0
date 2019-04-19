@@ -66,10 +66,16 @@ Update n°: 009
 Updated by: Thiebaut Alexis
 Date: 13/02/2019 
 Description: Implementing layer mask to exclude certain layers from being detected and avoided
+
+Update n°: 010
+Updated by: Thiebaut Alexis
+Date: 10/04/2019
+Description: Implementing new event OnAgentReady
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
     #region Events
+    public event Action OnAgentReady; 
     public event Action OnMovementStarted; 
     public event Action OnDestinationReached;
     public event Action OnAgentStopped;
@@ -443,9 +449,10 @@ public class CustomNavMeshAgent : MonoBehaviour
         }
 
     }
-    private void Start()
+    private void Awake()
     {
-        GenerateFieldOfView(); 
+        GenerateFieldOfView();
+        OnAgentReady?.Invoke(); 
     }   
     #endregion
 }

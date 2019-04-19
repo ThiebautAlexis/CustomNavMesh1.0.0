@@ -47,20 +47,9 @@ public static class PathCalculator
     /// <returns>Return if the path can be calculated</returns>
     public static bool CalculatePath(Vector3 _origin, Vector3 _destination, CustomNavPath _path, List<Triangle> _trianglesDatas)
     {
-        RaycastHit _hit;
-        Vector3 _groundedOrigin;
-        Vector3 _groundedDestination; 
-        if (Physics.Raycast(new Ray(_origin, Vector3.down), out _hit))
-        {
-            _groundedOrigin = _hit.point;
+        Vector3 _groundedOrigin = GeometryHelper.GetClosestPosition(_origin, _trianglesDatas);
+        Vector3 _groundedDestination = GeometryHelper.GetClosestPosition(_destination, _trianglesDatas);
 
-        }
-        else _groundedOrigin = _origin;
-        if (Physics.Raycast(new Ray(_destination, Vector3.down), out _hit))
-        {
-            _groundedDestination = _hit.point;
-        }
-        else _groundedDestination = _destination; 
         // GET TRIANGLES
         // Get the origin triangle and the destination triangle
         Triangle _originTriangle = GeometryHelper.GetTriangleContainingPosition(_groundedOrigin, _trianglesDatas);
@@ -119,7 +108,7 @@ public static class PathCalculator
                         // Set the heuristic cost from start for the linked point
                         _linkedTriangle.HeuristicCostFromStart = _cost;
                         //Its heuristic cost is equal to its cost from start plus the heuristic cost between the point and the destination
-                        _linkedTriangle.HeuristicPriority = HeuristicCost(_linkedTriangle, _targetedTriangle) + _cost;
+                        _linkedTriangle.HeuristicPriority = HeuristicCost(_linkedTriangle, _targetedTriangle) + _cost + _linkedTriangle.Weight;
                         //Set the point selected and add it to the open and closed list
                         _linkedTriangle.HasBeenSelected = true;
                         _openList.Add(_linkedTriangle);
@@ -370,11 +359,11 @@ public static class PathCalculator
 
         _simplifiedPath.Add(_destination);
         //Set the simplifiedPath
-        //_path.SetPath(_absoluteTrianglePath.Select(t => t.CenterPosition).ToList());
-
         _path.SetPath(_simplifiedPath);
     }
     #endregion
+
+
 
     #endregion
 }

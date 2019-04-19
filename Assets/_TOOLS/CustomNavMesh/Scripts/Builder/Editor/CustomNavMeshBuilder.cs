@@ -7,6 +7,7 @@ using UnityEngine.AI;
 using UnityEditor.SceneManagement;
 using UnityEditor;
 using UtilsLibrary.GUILibrary;
+using UnityEngine.SceneManagement; 
 using Debug = UnityEngine.Debug;
 
 /*
@@ -27,6 +28,11 @@ Update n°: 01
 Updated by: Alexis Thiébaut
 Date: 
 Description: Create a version of the builder in editor to remove an object of the scene
+
+Update n°: 02 
+Updated by: Alexis Thiébaut
+Date: 26/03/2019
+Description: Adding visual Debug to draw the navmesh in the editor
 */
 
 public class CustomNavMeshBuilder : EditorWindow 
@@ -41,6 +47,7 @@ public class CustomNavMeshBuilder : EditorWindow
 
     private string SavingDirectory { get { return Application.dataPath + "/Resources/CustomNavDatas"; } }
 
+    private Material material;
     #endregion
 
     #region Methods
@@ -203,7 +210,28 @@ public class CustomNavMeshBuilder : EditorWindow
         _dataSaved.TrianglesInfos = triangles;
         _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved, ".txt");
     }
+
+    /// <summary>
+    /// Load the datas to get the triangles
+    /// </summary>
+    private void LoadDatas()
+    {
+        string _fileName = $"CustomNavData_{SceneManager.GetActiveScene().name}";
+        TextAsset _textDatas = Resources.Load(Path.Combine("CustomNavDatas", _fileName), typeof(TextAsset)) as TextAsset;
+        if (_textDatas != null)
+        {
+            CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
+            CustomNavData _datas = _loader.DeserializeFileFromTextAsset(_textDatas);
+            triangles = _datas.TrianglesInfos;
+        }
+        else
+        {
+            Debug.Log("Not found"); 
+        }
+
+    }
     #endregion
+
     #endregion
 
     #region UnityMethods
@@ -223,7 +251,40 @@ public class CustomNavMeshBuilder : EditorWindow
         }
         GUITools.ActionButton("Open Saving Folder", OpenDirectory, Color.white, Color.black); 
         
-        if (NavMeshSurface.activeSurfaces.Count == 0) EditorGUILayout.HelpBox("You must add nav mesh surfaces to build the datas", MessageType.Error, true); 
+        if (NavMeshSurface.activeSurfaces.Count == 0) EditorGUILayout.HelpBox("You must add nav mesh surfaces to build the datas", MessageType.Error, true);
+    }
+
+    void OnEnable()
+    {
+        //Create the material necessary to draw the navMesh
+        material = new Material(Shader.Find("Specular"));
+        LoadDatas(); 
+        //Implement the event to draw the navmesh on the scene
+        SceneView.onSceneGUIDelegate += OnSceneGUI;
+    }
+
+    void OnDisable()
+    {
+        SceneView.onSceneGUIDelegate -= OnSceneGUI;
+    }
+
+    void OnSceneGUI(SceneView sceneView)
+    {
+        if (!material) return; 
+        foreach (Triangle t in triangles)
+        {
+            Mesh mesh = new Mesh();
+            mesh.vertices = t.Vertices.Select(v => v.Position).ToArray();
+            mesh.uv = new Vector2[3]{Vector2.zero, Vector2.zero, Vector2.zero};
+            mesh.triangles = new int[3] {0,1,2 };
+            Graphics.DrawMesh(mesh, Vector3.zero, Quaternion.identity, material, 0);
+
+            Handles.DrawAAPolyLine(t.Vertices.Select(v => v.Position).ToArray()); 
+        }
+
+        Handles.BeginGUI();
+
+        Handles.EndGUI();
     }
     #endregion
 }

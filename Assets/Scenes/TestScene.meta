@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: 2a23695faf126054f9fa04d1d8efdba0
+=======
+guid: 3f2501f674d2dd048ba3150cc8a0fc6d
+>>>>>>> TestBranch
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
