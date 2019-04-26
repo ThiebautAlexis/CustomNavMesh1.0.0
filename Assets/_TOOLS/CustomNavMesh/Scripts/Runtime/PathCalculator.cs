@@ -52,8 +52,8 @@ public static class PathCalculator
 
         // GET TRIANGLES
         // Get the origin triangle and the destination triangle
-        Triangle _originTriangle = GeometryHelper.GetTriangleContainingPosition(_groundedOrigin, _trianglesDatas);
-        Triangle _targetedTriangle = GeometryHelper.GetTriangleContainingPosition(_groundedDestination, _trianglesDatas);
+        Triangle _originTriangle = GeometryHelper.GetTriangleContainingPosition(_origin, _trianglesDatas);
+        Triangle _targetedTriangle = GeometryHelper.GetTriangleContainingPosition(_destination, _trianglesDatas);
 
         //Open list that contains all heuristically calculated triangles 
         List<Triangle> _openList = new List<Triangle>();
@@ -185,6 +185,9 @@ public static class PathCalculator
         _absoluteTrianglePath.Add(_currentTriangle);
         //Reverse the path to start at the origin 
         _absoluteTrianglePath.Reverse();
+
+        // _path.SetPath(_absoluteTrianglePath.Select(t => t.CenterPosition).ToList());
+        // return; 
         #endregion
 
         //Create the simplifiedPath
