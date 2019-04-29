@@ -316,7 +316,7 @@ public static class PathCalculator
         Vector3 _currentRightVertex;
         Vector3 _nextRightVertex;
 
-        for (int i = 0; i < _absoluteTrianglePath.Count - 1 ; i++) 
+        for (int i = 0; i < _leftVertices.Length - 1 ; i++) 
         {
             _currentLeftVertex = _leftVertices[_leftIndex];
             _nextLeftVertex = _leftVertices[i];
