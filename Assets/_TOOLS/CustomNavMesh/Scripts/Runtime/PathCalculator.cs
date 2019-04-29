@@ -31,6 +31,10 @@ Updated by: Thiebaut Alexis
 Date: 24/01/2019
 Description: Completing the funnel algorithm. Now the path is completly smoothed
 
+Update n°: 004
+Updated by Thiebaut Alexis
+Date 29/04/2019
+Description: Modify the Funnel selection of the left and right Vertices
 */
 
 public static class PathCalculator 
@@ -203,10 +207,12 @@ public static class PathCalculator
         //Simplify the path with Funnel Algorithm
 
         //Create both portals vertices arrays
-        Vector3[] _leftVertices = new Vector3[_absoluteTrianglePath.Count + 1];
-        Vector3[] _rightVertices = new Vector3[_absoluteTrianglePath.Count + 1];
+        Vector3[] _leftVertices = new Vector3[_absoluteTrianglePath.Count - 1];
+        Vector3[] _rightVertices = new Vector3[_absoluteTrianglePath.Count - 1];
+
         //Create the apex
         Vector3 _apex = _origin;
+
         //Set left and right indexes
         int _leftIndex = 1;
         int _rightIndex = 1;
@@ -217,28 +223,31 @@ public static class PathCalculator
         Vector3 _vertex1 = Vector3.zero;
         Vector3 _vertex2 = Vector3.zero;
 
+        _currentTriangle = null; 
+
         #region Initialise Portal Vertices
         //Initialize portal vertices between each triangles
-        for (int i = 0; i < _absoluteTrianglePath.Count - 1; i++)
+        for (int i = 1; i < _absoluteTrianglePath.Count - 1; i++)
         {
-            _startLinePoint = _absoluteTrianglePath[i].CenterPosition;
+            _currentTriangle = _absoluteTrianglePath[i];
+            _startLinePoint = _currentTriangle.CenterPosition;
             _endLinePoint = _absoluteTrianglePath[i + 1].CenterPosition;
-            for (int j = 0; j < _absoluteTrianglePath[i].Vertices.Length; j++)
+            for (int j = 0; j < _currentTriangle.Vertices.Length; j++)
             {
-                int k = j + 1 >= _absoluteTrianglePath[i].Vertices.Length ? 0 : j + 1;
-                _vertex1 = _absoluteTrianglePath[i].Vertices[j].Position;
-                _vertex2 = _absoluteTrianglePath[i].Vertices[k].Position; ;
+                int k = j + 1 >= _currentTriangle.Vertices.Length ? 0 : j + 1;
+                _vertex1 = _currentTriangle.Vertices[j].Position;
+                _vertex2 = _currentTriangle.Vertices[k].Position; ;
                 if (GeometryHelper.IsIntersecting(_startLinePoint, _endLinePoint, _vertex1, _vertex2))
                 {
                     if (GeometryHelper.AngleSign(_startLinePoint, _endLinePoint, _vertex1) > 0)
                     {
-                        _leftVertices[i + 1] = _vertex2;
-                        _rightVertices[i + 1] = _vertex1;
+                        _leftVertices[i] = _vertex2;
+                        _rightVertices[i] = _vertex1;
                     }
                     else
                     {
-                        _leftVertices[i + 1] = _vertex1;
-                        _rightVertices[i + 1] = _vertex2;
+                        _leftVertices[i] = _vertex1;
+                        _rightVertices[i] = _vertex2;
                     }
                     break;
                 }
@@ -248,11 +257,12 @@ public static class PathCalculator
         //Initialize start portal vertices
         _startLinePoint = _origin;
         _endLinePoint = _absoluteTrianglePath[1].CenterPosition;
-        for (int j = 0; j < _absoluteTrianglePath[0].Vertices.Length; j++)
+        _currentTriangle = _absoluteTrianglePath[0]; 
+        for (int j = 0; j < _currentTriangle.Vertices.Length; j++)
         {
-            int k = j + 1 >= _absoluteTrianglePath[0].Vertices.Length ? 0 : j + 1;
-            _vertex1 = _absoluteTrianglePath[0].Vertices[j].Position;
-            _vertex2 = _absoluteTrianglePath[0].Vertices[k].Position; ;
+            int k = j + 1 >= _currentTriangle.Vertices.Length ? 0 : j + 1;
+            _vertex1 = _currentTriangle.Vertices[j].Position;
+            _vertex2 = _currentTriangle.Vertices[k].Position; ;
             if (GeometryHelper.IsIntersecting(_startLinePoint, _endLinePoint, _vertex1, _vertex2))
             {
                 if (GeometryHelper.AngleSign(_startLinePoint, _endLinePoint, _vertex1) > 0)
@@ -270,8 +280,34 @@ public static class PathCalculator
         }
 
         // Initialise end portal vertices -> Close the funnel
-        _leftVertices[_absoluteTrianglePath.Count] = _destination;
-        _rightVertices[_absoluteTrianglePath.Count] = _destination;
+
+        // _leftVertices[_absoluteTrianglePath.Count] = _destination;
+        // _rightVertices[_absoluteTrianglePath.Count] = _destination;
+
+        _currentTriangle = _absoluteTrianglePath[_absoluteTrianglePath.Count - 2]; 
+        _startLinePoint = _currentTriangle.CenterPosition;
+        _endLinePoint = _destination;
+        for (int j = 0; j < _currentTriangle.Vertices.Length; j++)
+        {
+            int k = j + 1 >= _currentTriangle.Vertices.Length ? 0 : j + 1;
+            _vertex1 = _currentTriangle.Vertices[j].Position;
+            _vertex2 = _currentTriangle.Vertices[k].Position; ;
+            if (GeometryHelper.IsIntersecting(_startLinePoint, _endLinePoint, _vertex1, _vertex2))
+            {
+                if (GeometryHelper.AngleSign(_startLinePoint, _endLinePoint, _vertex1) > 0)
+                {
+                    _leftVertices[_leftVertices.Length -1] = _vertex2;
+                    _rightVertices[_rightVertices.Length - 1] = _vertex1;
+                }
+                else
+                {
+                    _leftVertices[_leftVertices.Length - 1] = _vertex1;
+                    _rightVertices[_rightVertices.Length - 1] = _vertex2;
+                }
+                break;
+            }
+        }
+
         #endregion
 
         //Step through the channel
@@ -280,7 +316,7 @@ public static class PathCalculator
         Vector3 _currentRightVertex;
         Vector3 _nextRightVertex;
 
-        for (int i = 2; i < _absoluteTrianglePath.Count + 1 ; i++) 
+        for (int i = 0; i < _absoluteTrianglePath.Count - 1 ; i++) 
         {
             _currentLeftVertex = _leftVertices[_leftIndex];
             _nextLeftVertex = _leftVertices[i];

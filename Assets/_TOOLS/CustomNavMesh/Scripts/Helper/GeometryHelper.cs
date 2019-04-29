@@ -18,13 +18,22 @@ public static class GeometryHelper
 	 *	### MODIFICATIONS ###
 	 *	#####################
 	 *
-	 *	Date :			[06/02/2018]
+	 *	Date :			[06/02/2019]
 	 *	Author :		[THIEBAUT Alexis]
 	 *
 	 *	Changes : 
 	 *
 	 *	Initialisation of the class
      *	    - Migrating all geometry methods from other scripts
+	 *
+	 *	-----------------------------------
+     *	
+     * Date :			[29/04/2019]
+	 *	Author :		[THIEBAUT Alexis]
+	 *
+	 *	Changes : 
+	 *
+	 *	Modification on the method Is Intersecting, now can return the intersection point
 	 *
 	 *	-----------------------------------
 	*/
@@ -221,26 +230,24 @@ public static class GeometryHelper
         }
         if (IsInAnyTriangle(_groundedPosition, _triangles))
         {
-            Debug.Log("Return HitPoint");
+            // Debug.Log("Return HitPoint");
             return _groundedPosition; 
         }
         //Get the closest triangle
         Triangle _triangle = GetTriangleContainingPosition(_position, _triangles);
         //Get the closest point from position into the triangle 
+        int _j = 0; 
         for (int i = 0; i < 2; i++)
         {
-            if (IsIntersecting(_triangle.Vertices[i].Position, _triangle.Vertices[i + 1].Position, _triangle.CenterPosition, _position, out _groundedPosition))
+            _j = i + 1 >= _triangle.Vertices.Length ? 0 : i + 1;
+            if (IsIntersecting(_triangle.Vertices[i].Position, _triangle.Vertices[_j].Position, _triangle.CenterPosition, _position, out _groundedPosition))
             {
-                Debug.Log("Return intersection -> " + _groundedPosition);
+                // Debug.Log("Return intersection -> " + _groundedPosition);
                 return _groundedPosition;
             }
         }
-        if (IsIntersecting(_triangle.Vertices[0].Position, _triangle.Vertices[2].Position, _triangle.CenterPosition, _position, out _groundedPosition))
-        {
-            Debug.Log("Return intersection");
-            return _groundedPosition;
-        }
-        Debug.Log("Def"); 
+
+        // Debug.Log("Def"); 
         return _triangle.CenterPosition;
     }
 

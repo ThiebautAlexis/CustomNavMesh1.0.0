@@ -205,7 +205,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         if(CustomNavMeshManager.Triangles == null || CustomNavMeshManager.Triangles.Count == 0)
         {
-            Debug.LogError("Triangles Not found. Must build the navmesh for the scene");
+            Debug.LogWarning("Triangles Not found. Must build the navmesh for the scene");
             Destroy(this);
             return false; 
         }
@@ -396,7 +396,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         if (CustomNavMeshManager.Triangles == null || CustomNavMeshManager.Triangles.Count == 0)
         {
-            Debug.LogError("Triangles Not found. Must build the navmesh for the scene");
+            Debug.LogWarning("Triangles Not found. Must build the navmesh for the scene");
             Destroy(this);
             return;
         }
