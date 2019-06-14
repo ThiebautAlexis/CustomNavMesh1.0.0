@@ -18,13 +18,22 @@ public static class GeometryHelper
 	 *	### MODIFICATIONS ###
 	 *	#####################
 	 *
-	 *	Date :			[06/02/2018]
+	 *	Date :			[06/02/2019]
 	 *	Author :		[THIEBAUT Alexis]
 	 *
 	 *	Changes : 
 	 *
 	 *	Initialisation of the class
      *	    - Migrating all geometry methods from other scripts
+	 *
+	 *	-----------------------------------
+     *	
+     * Date :			[29/04/2019]
+	 *	Author :		[THIEBAUT Alexis]
+	 *
+	 *	Changes : 
+	 *
+	 *	Modification on the method Is Intersecting, now can return the intersection point
 	 *
 	 *	-----------------------------------
 	*/
@@ -42,25 +51,32 @@ public static class GeometryHelper
     /// <returns>return true if segements intersect</returns>
     public static bool IsIntersecting(Vector3 _a, Vector3 _b, Vector3 _c, Vector3 _d)
     {
-        Vector3 _ab = _b - _a;
-        Vector3 _cd = _d - _a;
 
-        // P -> Intersection point 
-        // P = _a + k * _ab = _c + m * _cd
-        // A.x + k*_ab.x = _c.x + m *_cd.x
-        // A.y + k*_ab.y = _c.y + m *_cd.y
-        // A.z + k*_ab.z = _c.z + m *_cd.z
+        Vector3 _ab = _b - _a; // I
+        float _anglesign = AngleSign(_a, _b, _c);
+        Vector3 _cd = _anglesign < 0 ? _d - _c : _c - _d; // J
 
-        float _denominator = (_ab.x * _cd.x) - (_ab.y * _cd.y);
+        Vector3 _pointLeft = _anglesign < 0 ? _c : _d;
+
+        float _denominator = Vector3.Cross(_ab, _cd).magnitude;
 
         if (_denominator != 0)
         {
-            // k =  -(Ax*Jy-Cx*Jy-Jx*Ay+Jx*Cy)/(Ix*Jy-Iy*Jx)
-            float _k = -((_a.x * _cd.z) - (_c.x * _cd.z) - (_cd.x * _a.z) + (_cd.x * _c.z)) / _denominator;
-            // m =  -(-Ix*Ay+Ix*Cy+Iy*Ax-Iy*Cx)/(Ix*Jy-Iy*Jx)
-            float _m = -((-_ab.x * _a.z) + (_ab.x * _c.z) + (_ab.z * _a.x) - (_ab.z * _c.x)) / _denominator;
-            if (_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1)
+            //  m =    (     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
+            float _m = ((-_ab.x * _a.z) + (_ab.x * _pointLeft.z) + (_ab.z * _a.x) - (_ab.z * _pointLeft.x)) / _denominator;
+
+            //  k =    (     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
+            float _k = ((_cd.z * _a.x) - (_cd.z * _pointLeft.x) - (_cd.x * _a.z) + (_cd.x * _pointLeft.z)) / _denominator;
+
+
+            if ((_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1))
             {
+                
+                if (Vector3.Distance((_a + _k * _ab), (_pointLeft + _m * _cd)) > .1f)
+                {
+                    return false;
+                }
+                
                 return true;
             }
         }
@@ -70,7 +86,10 @@ public static class GeometryHelper
     public static bool IsIntersecting(Vector3 _a, Vector3 _b, Vector3 _c, Vector3 _d, out Vector3 _intersection)
     {
         Vector3 _ab = _b - _a; // I
-        Vector3 _cd = _d - _c; // J
+        float _anglesign = AngleSign(_a, _b, _c);
+        Vector3 _cd = _anglesign < 0 ? _d - _c : _c - _d; // J
+
+        Vector3 _pointLeft = _anglesign < 0 ? _c : _d; 
 
         // P -> Intersection point 
         // P = _a + k * _ab = _c + m * _cd
@@ -78,25 +97,32 @@ public static class GeometryHelper
         // A.y + k*_ab.y = _c.y + m *_cd.y
         // A.z + k*_ab.z = _c.z + m *_cd.z
 
-        float _denominator = _ab.magnitude * _cd.magnitude * (Mathf.Sin(Vector3.Angle(_ab, _cd) * Mathf.Deg2Rad));
+        float _denominator = Vector3.Cross(_ab, _cd).magnitude;
+
         if (_denominator != 0)
         {
-            //  m =    -(     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
-            float _m = -((-_ab.x * _a.z) + (_ab.x * _c.z) + (_ab.z * _a.x) - (_ab.z * _c.x)) / _denominator;
+            //  m =    (     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
+            float _m = ((-_ab.x * _a.z) + (_ab.x * _pointLeft.z) + (_ab.z * _a.x) - (_ab.z * _pointLeft.x)) / _denominator;
 
-            //  k =    -(     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
-            float _k = -((_cd.z * _a.x) - (_cd.z * _c.x) - (_cd.x * _a.z) + ( _cd.x * _c.z)) / _denominator; 
+            //  k =    (     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
+            float _k = ((_cd.z * _a.x) - (_cd.z * _pointLeft.x) - (_cd.x * _a.z) + ( _cd.x * _pointLeft.z)) / _denominator;
 
-            Debug.Log(_k);
-            Debug.Log(_m);
+            //Debug.Log(_m + " " + _k); 
 
-            if(_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1)
+            if ((_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1))
             {
-                _intersection = _c + _m * _cd; 
+
+                if (Vector3.Distance((_a + _k * _ab), (_pointLeft + _m * _cd)) > .1f)
+                {
+                    _intersection = _a;
+                    return false;
+                }
+
+                _intersection = _a + _k * _ab; 
                 return true; 
             }
         }
-        _intersection = Vector3.zero; 
+        _intersection = _a; 
         return false; 
     }
 
@@ -109,6 +135,18 @@ public static class GeometryHelper
     {
         Barycentric _barycentric = new Barycentric(_triangle.Vertices[0].Position, _triangle.Vertices[1].Position, _triangle.Vertices[2].Position, _position);
         return _barycentric.IsInside;
+    }
+
+    public static bool IsInAnyTriangle(Vector3 _position, List<Triangle> _triangles)
+    {
+        for (int i = 0; i < _triangles.Count; i++)
+        {
+            if(IsInTriangle(_position, _triangles[i]))
+            {
+                return true; 
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -203,16 +241,32 @@ public static class GeometryHelper
     public static Vector3 GetClosestPosition(Vector3 _position, List<Triangle> _triangles)
     {
         RaycastHit _hit;
+        Vector3 _groundedPosition = _position;
         if (Physics.Raycast(new Ray(_position, Vector3.down), out _hit))
         {
-            return _hit.point;
+            _groundedPosition = _hit.point;
+        }
+        if (IsInAnyTriangle(_groundedPosition, _triangles))
+        {
+            // Debug.Log("Return HitPoint");
+            return _groundedPosition; 
         }
         //Get the closest triangle
         Triangle _triangle = GetTriangleContainingPosition(_position, _triangles);
         //Get the closest point from position into the triangle 
-        Vector3 _closestPosition = Vector3.zero;
+        int _j = 0; 
+        for (int i = 0; i < 2; i++)
+        {
+            _j = i + 1 >= _triangle.Vertices.Length ? 0 : i + 1;
+            if (IsIntersecting(_triangle.Vertices[i].Position, _triangle.Vertices[_j].Position, _triangle.CenterPosition, _position, out _groundedPosition))
+            {
+                // Debug.Log("Return intersection -> " + _groundedPosition);
+                return _groundedPosition;
+            }
+        }
 
-        return _closestPosition;
+        // Debug.Log("Def"); 
+        return _triangle.CenterPosition;
     }
 
 

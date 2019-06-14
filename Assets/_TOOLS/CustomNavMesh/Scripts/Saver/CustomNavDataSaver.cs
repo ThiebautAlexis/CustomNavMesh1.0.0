@@ -48,6 +48,11 @@ public class CustomNavDataSaver<T>
     public void SaveFile(string _path, string _objectName, T _object, string _extension)
     {
         string _name = _object.GetType().ToString() + "_" + _objectName + _extension;
+        if(File.Exists(Path.Combine(_path, _name) + ".meta"))
+        {
+            File.Delete(Path.Combine(_path, _name) + ".meta"); 
+            Debug.Log("Delete .meta"); 
+        }
         IFormatter _format = new BinaryFormatter();
         Stream _toSave = new FileStream(Path.Combine(_path, _name), FileMode.OpenOrCreate, FileAccess.ReadWrite);
         _format.Serialize(_toSave, _object);

@@ -209,6 +209,7 @@ public class CustomNavMeshBuilder : EditorWindow
         CustomNavData _dataSaved = new CustomNavData();
         _dataSaved.TrianglesInfos = triangles;
         _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved, ".txt");
+        OpenDirectory(); 
     }
 
     /// <summary>
