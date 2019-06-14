@@ -30,7 +30,7 @@ Updated by: Thiebaut Alexis
 Date: 12/02/2019
 Description: Removing the Monobehaviour Behaviour and using RuntimeInitializeOnLoadMethod attribute 
 */
-public class CustomNavMeshManager
+public static class CustomNavMeshManager
 {
     #region Fields and properties
     [SerializeField]private static List<Triangle> triangles = new List<Triangle>();
@@ -44,18 +44,26 @@ public class CustomNavMeshManager
     /// Get the datas from the resources folder to get the navpoints and the triangles
     /// </summary>
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    static void LoadDatas()
+    public static void InitManager()
     {
-        string _fileName = $"CustomNavData_{SceneManager.GetActiveScene().name}";
+        SceneManager.sceneLoaded += LoadDatas;
+#if UNITY_EDITOR
+        LoadDatas(SceneManager.GetActiveScene(), LoadSceneMode.Additive);
+#endif
+    }
+
+    public static void LoadDatas(Scene scene, LoadSceneMode _mode)
+    {
+        string _fileName = $"CustomNavData_{scene.name}";
         TextAsset _textDatas = Resources.Load(Path.Combine(ResourcesPath, _fileName), typeof(TextAsset)) as TextAsset;
-        if(_textDatas == null)
+        if (_textDatas == null)
         {
             Debug.LogError($"{_fileName} not found.");
-            return; 
+            return;
         }
         CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
         CustomNavData _datas = _loader.DeserializeFileFromTextAsset(_textDatas);
-        triangles = _datas.TrianglesInfos; 
+        triangles = _datas.TrianglesInfos;
     }
 
     /*

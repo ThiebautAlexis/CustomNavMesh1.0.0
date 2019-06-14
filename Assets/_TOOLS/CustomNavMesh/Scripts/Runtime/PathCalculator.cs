@@ -35,6 +35,11 @@ Update n°: 004
 Updated by Thiebaut Alexis
 Date 29/04/2019
 Description: Modify the Funnel selection of the left and right Vertices
+
+Update n°: 005
+Updated by Thiebaut Alexis
+Date: 14/06/2019
+Description: Improving the Funnel Algorithm
 */
 
 public static class PathCalculator 
@@ -213,10 +218,6 @@ public static class PathCalculator
         //Create the apex
         Vector3 _apex = _origin;
 
-        //Set left and right indexes
-        int _leftIndex = 1;
-        int _rightIndex = 1;
-
         //Initialize portal vertices
         Vector3 _startLinePoint = Vector3.zero;
         Vector3 _endLinePoint = Vector3.zero;
@@ -239,6 +240,7 @@ public static class PathCalculator
                 _vertex2 = _currentTriangle.Vertices[k].Position; ;
                 if (GeometryHelper.IsIntersecting(_startLinePoint, _endLinePoint, _vertex1, _vertex2))
                 {
+                    //Debug.Log(_startLinePoint + "///" + _endLinePoint + " intersect with " + _vertex1 + "///" + _vertex2); 
                     if (GeometryHelper.AngleSign(_startLinePoint, _endLinePoint, _vertex1) > 0)
                     {
                         _leftVertices[i] = _vertex2;
@@ -281,10 +283,11 @@ public static class PathCalculator
 
         // Initialise end portal vertices -> Close the funnel
 
-        // _leftVertices[_absoluteTrianglePath.Count] = _destination;
-        // _rightVertices[_absoluteTrianglePath.Count] = _destination;
+        _leftVertices[_leftVertices.Length - 1] = _destination;
+        _rightVertices[_rightVertices.Length - 1] = _destination;
 
-        _currentTriangle = _absoluteTrianglePath[_absoluteTrianglePath.Count - 2]; 
+        /*
+        _currentTriangle = _absoluteTrianglePath[_absoluteTrianglePath.Count - 1]; 
         _startLinePoint = _currentTriangle.CenterPosition;
         _endLinePoint = _destination;
         for (int j = 0; j < _currentTriangle.Vertices.Length; j++)
@@ -307,7 +310,7 @@ public static class PathCalculator
                 break;
             }
         }
-
+        */
         #endregion
 
         //Step through the channel
@@ -316,7 +319,12 @@ public static class PathCalculator
         Vector3 _currentRightVertex;
         Vector3 _nextRightVertex;
 
-        for (int i = 0; i < _leftVertices.Length - 1 ; i++) 
+        //Set left and right indexes
+        int _leftIndex = 0;
+        int _rightIndex = 0;
+
+
+        for (int i = 1; i < _absoluteTrianglePath.Count - 1 ; i++) 
         {
             _currentLeftVertex = _leftVertices[_leftIndex];
             _nextLeftVertex = _leftVertices[i];
@@ -336,9 +344,9 @@ public static class PathCalculator
                         // Set the new Apex
                         _apex = _currentRightVertex;
                         _simplifiedPath.Add(_apex);
-                        //Set i to the apex index to be at the good index on the next loop 
-                        i = _rightIndex; 
 
+                        //Set i to the apex index to be at the good index on the next loop 
+                        i = _rightIndex;
                         // Find new right vertex.
                         for (int j = _rightIndex; j < _rightVertices.Length; j++)
                         {
@@ -348,6 +356,10 @@ public static class PathCalculator
                                 break;
                             }
                         }
+                        _leftIndex = i;
+                        i--; 
+                        continue; 
+
                     }
                     // else skip to the next vertex
                     else
@@ -372,10 +384,10 @@ public static class PathCalculator
                         //Set the new Apex
                         _apex = _currentLeftVertex;
                         _simplifiedPath.Add(_apex);
+
                         //Set i to the apex index to be at the good index on the next loop 
                         i = _leftIndex;
-
-                        // Find next Left Index.
+                        // Find next Left Index
                         for (int j = _leftIndex; j < _leftVertices.Length; j++)
                         {
                             if (_leftVertices[j] != _apex)
@@ -384,6 +396,11 @@ public static class PathCalculator
                                 break;
                             }
                         }
+                        _rightIndex = i;
+                        i--; 
+                        continue; 
+                       
+
                     }
                     //else skip to the next vertex
                     else
@@ -394,6 +411,7 @@ public static class PathCalculator
                 //else skip
             }
             //else skip
+
         }
 
         _simplifiedPath.Add(_destination);
@@ -401,8 +419,5 @@ public static class PathCalculator
         _path.SetPath(_simplifiedPath);
     }
     #endregion
-
-
-
     #endregion
 }

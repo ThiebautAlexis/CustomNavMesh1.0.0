@@ -71,23 +71,29 @@ Update n°: 010
 Updated by: Thiebaut Alexis
 Date: 10/04/2019
 Description: Implementing new event OnAgentReady
+
+Update n°: 011
+Updated by: Thiebaut Alexis
+Date: 27/05/2019
+Description: 
++Implementing a new float: pathRadius: used to set the precision of the stifness to follow the path 
++Correcting the case when the agent goes in the wrong direction along the path using the scalar product 
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
     #region Events
-    public event Action OnAgentReady; 
-    public event Action OnMovementStarted; 
+    public event Action OnAgentReady;
+    public event Action OnMovementStarted;
     public event Action OnDestinationReached;
     public event Action OnAgentStopped;
     #endregion
 
     #region FieldsAndProperty
-    [SerializeField] KeyCode key; 
 
     #region Inspector
 
     #region Vector3
-    [SerializeField] private Vector3 positionOffset;
+    [SerializeField] private Vector3 positionOffset = Vector3.zero;
     #endregion
 
     #region float
@@ -100,8 +106,32 @@ public class CustomNavMeshAgent : MonoBehaviour
     [SerializeField, Range(.1f, 5)] protected float height = 1;
     public float Height { get { return height / 2; } }
 
-    [SerializeField, Range(.5f, 2)] protected float radius = 1;
-    public float Radius { get { return radius * .75f; } }
+    [SerializeField, Range(.5f, 5)] protected float radius = 1;
+    public float Radius
+    {
+        get
+        {
+            return radius * .75f;
+        }
+        set
+        {
+            if (value > 0) radius = value;
+        }
+    }
+
+    [SerializeField, Range(.1f, 5)] protected float pathRadius = 1;
+    public float PathRadius
+    {
+        get
+        {
+            return pathRadius;
+        }
+        set
+        {
+            if (value > 0)
+                pathRadius = value;
+        }
+    }
 
     [SerializeField, Range(.1f, 10)] protected float speed = 1;
     public float Speed
@@ -129,7 +159,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     [SerializeField, Range(20, 180)] protected int detectionFieldOfView = 90;
     #endregion
 
-    [SerializeField] private LayerMask avoidanceLayer; 
+    [SerializeField] private LayerMask avoidanceLayer;
     #endregion
 
     #region Other Fields and properties
@@ -156,7 +186,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         get
         {
             Vector3 _heightOffset = new Vector3(0, (height / 2) + baseOffset, 0);
-            return  CenterPosition - _heightOffset ;
+            return CenterPosition - _heightOffset;
         }
     }
 
@@ -164,17 +194,17 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         get
         {
-            if (currentPath.PathPoints.Count == 0) return OffsetPosition; 
+            if (currentPath.PathPoints.Count == 0) return OffsetPosition;
             return currentPath.PathPoints.Last();
         }
     }
 
-    private Vector3 velocity; 
-    public Vector3 Velocity { get { return velocity;} }
+    private Vector3 velocity;
+    public Vector3 Velocity { get { return velocity; } }
     #endregion
 
     #region Vector3[]
-    private Vector3[] fieldOfView = null; 
+    private Vector3[] fieldOfView = null;
     #endregion
     #endregion
 
@@ -203,15 +233,15 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <returns>if the destination can be reached</returns>
     public bool CheckDestination(Vector3 _position)
     {
-        if(CustomNavMeshManager.Triangles == null || CustomNavMeshManager.Triangles.Count == 0)
+        if (CustomNavMeshManager.Triangles == null || CustomNavMeshManager.Triangles.Count == 0)
         {
             Debug.LogWarning("Triangles Not found. Must build the navmesh for the scene");
-            Destroy(this);
-            return false; 
+            //Destroy(this);
+            return false;
         }
-        if(isMoving)
+        if (isMoving)
         {
-            StopAllCoroutines(); 
+            StopAllCoroutines();
         }
         pathState = CalculatingState.Calculating;
         bool _canBeReached = PathCalculator.CalculatePath(OffsetPosition, _position, currentPath, CustomNavMeshManager.Triangles);
@@ -231,7 +261,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <returns></returns>
     IEnumerator FollowPath()
     {
-        OnMovementStarted?.Invoke(); 
+        OnMovementStarted?.Invoke();
         isMoving = true;
         int _pathIndex = 1;
         List<Vector3> _followingPath = currentPath.PathPoints;  //List of points in the path
@@ -239,14 +269,14 @@ public class CustomNavMeshAgent : MonoBehaviour
         /*STEERING*/
         //Predicted position is the position of the agent at the next frame
         Vector3 _predictedPosition;
-         
+
 
         // Previous Position
         Vector3 _previousPosition = OffsetPosition;
         //Next Position
         Vector3 _nextPosition = _followingPath[1];
 
-        
+
         Vector3 _dir;
         Vector3 _targetPosition;
         Vector3 _normalPoint;
@@ -254,23 +284,24 @@ public class CustomNavMeshAgent : MonoBehaviour
 
         float _distance = 0;
         // Angle theta is the angle between forward and velocity direction
-        float _theta; 
+        float _theta;
+        float _scalarProduct;
 
         RaycastHit _hitInfo;
         Ray _ray;
         // List of directions to apply on the avoidance 
-        List<Vector3> _obstaclesPos = new List<Vector3>(); 
+        List<Vector3> _obstaclesPos = new List<Vector3>();
 
 
         /* First the velocity is equal to the normalized direction from the agent position to the next position */
         if (velocity == Vector3.zero)
-            velocity = transform.forward * speed;
-        Seek(_nextPosition); 
+            velocity = (_nextPosition - OffsetPosition).normalized * speed;
+        Seek(_nextPosition);
 
         while (Vector3.Distance(OffsetPosition, LastPosition) > radius)
         {
             /* Apply the velocity to the transform position multiply by the speed and by Time.deltaTime to move*/
-            velocity = velocity.normalized * speed; 
+            velocity = velocity.normalized * speed;
             velocity = Vector3.ClampMagnitude(velocity, speed);
             transform.position += velocity * Time.deltaTime;
 
@@ -299,15 +330,15 @@ public class CustomNavMeshAgent : MonoBehaviour
             for (int i = 0; i < fieldOfView.Length; i++)
             {
                 // Apply a offset rotation on the direction equal to the angle between the forward and the velocity (theta angle)
-                _ray = new Ray(OffsetPosition, 
+                _ray = new Ray(OffsetPosition,
                     new Vector3(Mathf.Sin(_theta * Mathf.Deg2Rad) * fieldOfView[i].z + Mathf.Cos(_theta * Mathf.Deg2Rad) * fieldOfView[i].x,
-                    0, 
-                    Mathf.Cos(_theta * Mathf.Deg2Rad) * fieldOfView[i].z - Mathf.Sin(_theta * Mathf.Deg2Rad) * fieldOfView[i].x)); 
+                    0,
+                    Mathf.Cos(_theta * Mathf.Deg2Rad) * fieldOfView[i].z - Mathf.Sin(_theta * Mathf.Deg2Rad) * fieldOfView[i].x));
                 //Cast the ray
-                if(Physics.Raycast(_ray , out _hitInfo, detectionRange, avoidanceLayer.value))
+                if (Physics.Raycast(_ray, out _hitInfo, detectionRange, avoidanceLayer.value))
                 {
                     //If the hit object isn't a navsurface's child 
-                    if (!_hitInfo.transform.GetComponentInParent<NavMeshSurface>())
+                    if (!_hitInfo.transform.GetComponentInParent<NavMeshSurface>() && _hitInfo.collider.gameObject != this.gameObject)
                     {
                         // Add the direction to avoid to the list
                         _obstaclesPos.Add((_hitInfo.point - _hitInfo.transform.position).normalized);
@@ -315,7 +346,7 @@ public class CustomNavMeshAgent : MonoBehaviour
                 }
             }
             //If the obstacle position contains directions to follow in order to avoid the obstacle
-            if(_obstaclesPos.Count > 0)
+            if (_obstaclesPos.Count > 0)
             {
                 // Get the average direcion to follow and avoid in this direction
                 Vector3 _v = Vector3.zero;
@@ -323,19 +354,19 @@ public class CustomNavMeshAgent : MonoBehaviour
                 Avoid(_v);
                 _obstaclesPos = new List<Vector3>();
                 yield return new WaitForEndOfFrame();
-                continue; 
+                continue;
             }
 
 
             /* Get the predicted Velocity and the Predicted position*/
             _predictedPosition = OffsetPosition + velocity;
-             
-             /*Get the transposed Position of the predicted position on the segment between the previous and the next point
-             * The agent has to get closer while it's to far away from the path 
-             */
-             _normalPoint = GeometryHelper.GetNormalPoint(_predictedPosition, _previousPosition, _nextPosition);
-             
-             
+
+            /*Get the transposed Position of the predicted position on the segment between the previous and the next point
+            * The agent has to get closer while it's to far away from the path 
+            */
+            _normalPoint = GeometryHelper.GetNormalPoint(_predictedPosition, _previousPosition, _nextPosition);
+
+
             /* Direction of the segment between the previous and the next position normalized in order to go further on the path
              * Targeted position is the normal point + an offset defined by the direction of the segment to go a little further on the path
              * If the target is out of the segment between the previous and the next position, the target position is the next position
@@ -347,13 +378,14 @@ public class CustomNavMeshAgent : MonoBehaviour
             * If the distance is greater than the radius, it has to steer to get closer
             */
             _distance = Vector3.Distance(_predictedPosition, _normalPoint);
-            if (_distance > radius/2)
+            _scalarProduct = Vector3.Dot(velocity.normalized, _dir.normalized);
+            if (_distance > pathRadius / 2 || _scalarProduct == -1)
             {
                 Seek(_targetPosition);
             }
             yield return new WaitForEndOfFrame();
         }
-        StopAgent(); 
+        StopAgent();
         OnDestinationReached?.Invoke();
     }
 
@@ -364,9 +396,9 @@ public class CustomNavMeshAgent : MonoBehaviour
     private void GenerateFieldOfView()
     {
         fieldOfView = new Vector3[detectionAccuracy];
-        float _angle = - (detectionFieldOfView / 2);
-        float _offset = detectionFieldOfView / (detectionAccuracy - 1); 
-        Vector3 _point; 
+        float _angle = -(detectionFieldOfView / 2);
+        float _offset = detectionFieldOfView / (detectionAccuracy - 1);
+        Vector3 _point;
         for (int i = 0; i < detectionAccuracy; i++)
         {
             _point = new Vector3(Mathf.Sin(_angle * Mathf.Deg2Rad), 0, Mathf.Cos(_angle * Mathf.Deg2Rad)).normalized;
@@ -383,9 +415,9 @@ public class CustomNavMeshAgent : MonoBehaviour
     private void Seek(Vector3 _target)
     {
         Vector3 _desiredVelocity = (_target - OffsetPosition).normalized * speed;
-        Vector3 _steer = ((_desiredVelocity - velocity) * steerForce * Time.deltaTime );
+        Vector3 _steer = ((_desiredVelocity - velocity) * steerForce * Time.deltaTime);
         velocity += _steer;
-        velocity = Vector3.ClampMagnitude(velocity, speed); 
+        velocity = Vector3.ClampMagnitude(velocity, speed);
     }
 
     /// <summary>
@@ -397,7 +429,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         if (CustomNavMeshManager.Triangles == null || CustomNavMeshManager.Triangles.Count == 0)
         {
             Debug.LogWarning("Triangles Not found. Must build the navmesh for the scene");
-            Destroy(this);
+            //Destroy(this);
             return;
         }
         if (isMoving)
@@ -419,25 +451,25 @@ public class CustomNavMeshAgent : MonoBehaviour
     public void StopAgent()
     {
         StopCoroutine(FollowPath());
-        currentPath.PathPoints.Clear(); 
+        currentPath.PathPoints.Clear();
         isMoving = false;
         pathState = CalculatingState.Waiting;
-        OnAgentStopped?.Invoke(); 
+        OnAgentStopped?.Invoke();
     }
     #endregion
 
     #region UnityMethods
     private void OnDrawGizmos()
     {
-        
+
         Gizmos.color = Color.blue;
-        Gizmos.DrawSphere(CenterPosition, .1f); 
+        Gizmos.DrawSphere(CenterPosition, .1f);
         Gizmos.color = Color.cyan;
         Gizmos.DrawSphere(CenterPosition + velocity, .1f);
-        Gizmos.DrawLine(CenterPosition, CenterPosition + velocity );
+        Gizmos.DrawLine(CenterPosition, CenterPosition + velocity);
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(OffsetPosition, .1f);
-        Gizmos.color = Color.cyan; 
+        Gizmos.color = Color.cyan;
         if (currentPath == null || currentPath.PathPoints == null || currentPath.PathPoints.Count == 0) return;
         for (int i = 0; i < currentPath.PathPoints.Count; i++)
         {
@@ -447,13 +479,12 @@ public class CustomNavMeshAgent : MonoBehaviour
         {
             Gizmos.DrawLine(currentPath.PathPoints[i], currentPath.PathPoints[i + 1]);
         }
-
     }
     private void Awake()
     {
         GenerateFieldOfView();
-        OnAgentReady?.Invoke(); 
-    }   
+        OnAgentReady?.Invoke();
+    }
     #endregion
 }
 public enum CalculatingState

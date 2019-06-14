@@ -5,7 +5,7 @@ using UnityEngine;
 public class SetDestination : MonoBehaviour
 {
 
-    [SerializeField] CustomNavMeshAgent agent;  
+    [SerializeField] CustomNavMeshAgent agent = null;  
 
 	
 	// Update is called once per frame

@@ -92,6 +92,8 @@ public class CustomNavMeshAgentEditor : Editor
     SerializedProperty detectionRange = null;
     /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.avoidanceLayer"/></summary> of type <see cref="float"/>
     SerializedProperty avoidanceLayer = null;
+    /// <summary>Serialized Property for <see cref="CustomNavMeshAgent.pathRadius"/></summary> of type <see cref="float"/>
+    SerializedProperty pathRadius = null;
     #endregion
 
     Vector3 centerPosition = Vector3.zero; 
@@ -165,6 +167,7 @@ public class CustomNavMeshAgentEditor : Editor
         EditorGUILayout.LabelField("MOVEMENTS SETTINGS", _headerStyle);
         EditorGUILayout.PropertyField(speed);
         EditorGUILayout.PropertyField(steerForce);
+        EditorGUILayout.PropertyField(pathRadius); 
 
         EditorGUILayout.Separator();
 
@@ -203,7 +206,8 @@ public class CustomNavMeshAgentEditor : Editor
         detectionAccuracy = serializedObject.FindProperty("detectionAccuracy");
         detectionFieldOfView = serializedObject.FindProperty("detectionFieldOfView");
         detectionRange = serializedObject.FindProperty("detectionRange");
-        avoidanceLayer = serializedObject.FindProperty("avoidanceLayer"); 
+        avoidanceLayer = serializedObject.FindProperty("avoidanceLayer");
+        pathRadius = serializedObject.FindProperty("pathRadius"); 
     }
 
     private void OnSceneGUI()
@@ -213,6 +217,7 @@ public class CustomNavMeshAgentEditor : Editor
         DrawWireCylinder(centerPosition, radius.floatValue/2, height.floatValue/2, Color.green);
         Handles.color = new Color(1, 0, 0, .3f);
         DrawFieldOfView(centerPosition, localForward, detectionRange.floatValue, detectionFieldOfView.intValue);
+        Handles.DrawSolidDisc((serializedObject.targetObject as CustomNavMeshAgent).OffsetPosition, Vector3.up, pathRadius.floatValue); 
     }
     #endregion
 

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+#pragma warning disable 
+
 /*
 [Script Header] TDS_Triangle Version 0.0.1
 Created by: Alexis Thiébaut

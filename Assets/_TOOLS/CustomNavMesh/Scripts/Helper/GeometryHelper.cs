@@ -51,27 +51,32 @@ public static class GeometryHelper
     /// <returns>return true if segements intersect</returns>
     public static bool IsIntersecting(Vector3 _a, Vector3 _b, Vector3 _c, Vector3 _d)
     {
+
         Vector3 _ab = _b - _a; // I
-        Vector3 _cd = _d - _c; // J
+        float _anglesign = AngleSign(_a, _b, _c);
+        Vector3 _cd = _anglesign < 0 ? _d - _c : _c - _d; // J
 
-        // P -> Intersection point 
-        // P = _a + k * _ab = _c + m * _cd
-        // A.x + k*_ab.x = _c.x + m *_cd.x
-        // A.y + k*_ab.y = _c.y + m *_cd.y
-        // A.z + k*_ab.z = _c.z + m *_cd.z
+        Vector3 _pointLeft = _anglesign < 0 ? _c : _d;
 
-        float _denominator = _ab.magnitude * _cd.magnitude * (Mathf.Sin(Vector3.Angle(_ab, _cd) * Mathf.Deg2Rad));
+        float _denominator = Vector3.Cross(_ab, _cd).magnitude;
 
         if (_denominator != 0)
         {
-            //  m =    -(     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
-            float _m = -((-_ab.x * _a.z) + (_ab.x * _c.z) + (_ab.z * _a.x) - (_ab.z * _c.x)) / _denominator;
+            //  m =    (     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
+            float _m = ((-_ab.x * _a.z) + (_ab.x * _pointLeft.z) + (_ab.z * _a.x) - (_ab.z * _pointLeft.x)) / _denominator;
 
-            //  k =    -(     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
-            float _k = -((_cd.z * _a.x) - (_cd.z * _c.x) - (_cd.x * _a.z) + (_cd.x * _c.z)) / _denominator;
+            //  k =    (     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
+            float _k = ((_cd.z * _a.x) - (_cd.z * _pointLeft.x) - (_cd.x * _a.z) + (_cd.x * _pointLeft.z)) / _denominator;
 
-            if ((_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1) || (_m >= -1 && _m <= 0 && _k >= -1 && _k <= 0))
+
+            if ((_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1))
             {
+                
+                if (Vector3.Distance((_a + _k * _ab), (_pointLeft + _m * _cd)) > .1f)
+                {
+                    return false;
+                }
+                
                 return true;
             }
         }
@@ -81,7 +86,10 @@ public static class GeometryHelper
     public static bool IsIntersecting(Vector3 _a, Vector3 _b, Vector3 _c, Vector3 _d, out Vector3 _intersection)
     {
         Vector3 _ab = _b - _a; // I
-        Vector3 _cd = _d - _c; // J
+        float _anglesign = AngleSign(_a, _b, _c);
+        Vector3 _cd = _anglesign < 0 ? _d - _c : _c - _d; // J
+
+        Vector3 _pointLeft = _anglesign < 0 ? _c : _d; 
 
         // P -> Intersection point 
         // P = _a + k * _ab = _c + m * _cd
@@ -89,17 +97,27 @@ public static class GeometryHelper
         // A.y + k*_ab.y = _c.y + m *_cd.y
         // A.z + k*_ab.z = _c.z + m *_cd.z
 
-        float _denominator = _ab.magnitude * _cd.magnitude * (Mathf.Sin(Vector3.Angle(_ab, _cd) * Mathf.Deg2Rad));
+        float _denominator = Vector3.Cross(_ab, _cd).magnitude;
+
         if (_denominator != 0)
         {
-            //  m =    -(     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
-            float _m = -((-_ab.x * _a.z) + (_ab.x * _c.z) + (_ab.z * _a.x) - (_ab.z * _c.x)) / _denominator;
+            //  m =    (     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
+            float _m = ((-_ab.x * _a.z) + (_ab.x * _pointLeft.z) + (_ab.z * _a.x) - (_ab.z * _pointLeft.x)) / _denominator;
 
-            //  k =    -(     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
-            float _k = -((_cd.z * _a.x) - (_cd.z * _c.x) - (_cd.x * _a.z) + ( _cd.x * _c.z)) / _denominator;
+            //  k =    (     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
+            float _k = ((_cd.z * _a.x) - (_cd.z * _pointLeft.x) - (_cd.x * _a.z) + ( _cd.x * _pointLeft.z)) / _denominator;
 
-            if ((_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1) || (_m >= -1 && _m <= 0 && _k >= -1 && _k <= 0))
+            //Debug.Log(_m + " " + _k); 
+
+            if ((_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1))
             {
+
+                if (Vector3.Distance((_a + _k * _ab), (_pointLeft + _m * _cd)) > .1f)
+                {
+                    _intersection = _a;
+                    return false;
+                }
+
                 _intersection = _a + _k * _ab; 
                 return true; 
             }
