@@ -211,6 +211,21 @@ public class CustomNavMeshAgent : MonoBehaviour
     #endregion
 
     #region Methods
+    /// <summary>
+    /// Add the layers to the avoidanceLayer using their names
+    /// </summary>
+    /// <param name="_layerNames">Names of the added layers</param>
+    public void AddAvoidanceLayer(string[] _layerNames) => AddAvoidanceLayer(LayerMask.GetMask(_layerNames));
+
+    /// <summary>
+    /// Add the layers to the avoidanceLayer using their int value
+    /// </summary>
+    /// <param name="_maskValue">int value of the mask(s)</param>
+    public void AddAvoidanceLayer(int _maskValue)
+    {
+        if (_maskValue == 0) return;
+        avoidanceLayer |= _maskValue;
+    }
 
     /// <summary>
     /// Apply the avoidance force to the velocity
@@ -405,6 +420,24 @@ public class CustomNavMeshAgent : MonoBehaviour
             fieldOfView[i] = _point;
             _angle += _offset;
         }
+    }
+
+    /// <summary>
+    /// Remove the layers from the avoidanceLayer using their names
+    /// </summary>
+    /// <param name="_layerNames">Names of the removed layers</param>
+    public void RemoveAvoidanceLayer(string[] _layerNames) => RemoveAvoidanceLayer(LayerMask.GetMask(_layerNames));
+
+    /// <summary>
+    /// Remove the layers from the avoidanceLayer using their int value
+    /// </summary>
+    /// <param name="_maskValue">int value of the mask(s)</param>
+    public void RemoveAvoidanceLayer(int _maskValue)
+    {
+        if (_maskValue == 0) return;
+        LayerMask _inverted = ~avoidanceLayer;
+        _inverted |= _maskValue;
+        avoidanceLayer = ~_inverted;
     }
 
     /// <summary>
