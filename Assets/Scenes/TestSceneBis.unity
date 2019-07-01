@@ -124,7 +124,7 @@ GameObject:
   - component: {fileID: 177289299}
   - component: {fileID: 177289298}
   - component: {fileID: 177289297}
-  m_Layer: 0
+  m_Layer: 4
   m_Name: Cube (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -620,7 +620,7 @@ GameObject:
   - component: {fileID: 1231233375}
   - component: {fileID: 1231233374}
   - component: {fileID: 1231233373}
-  m_Layer: 0
+  m_Layer: 4
   m_Name: Cube (4)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -711,7 +711,7 @@ GameObject:
   - component: {fileID: 1233570420}
   - component: {fileID: 1233570419}
   - component: {fileID: 1233570418}
-  m_Layer: 0
+  m_Layer: 4
   m_Name: Cube (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1088,20 +1088,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   positionOffset: {x: 0, y: 0, z: 0}
-  avoidanceForce: 5
+  avoidanceForce: 84.1
   baseOffset: 0
-  detectionRange: 2
+  detectionRange: 3
   height: 1
   radius: 1
   pathRadius: 0.5
-  speed: 5
-  steerForce: 10
+  speed: 3
+  steerForce: 8
   agentPriority: 1
-  detectionAccuracy: 3
-  detectionFieldOfView: 90
+  detectionAccuracy: 5
+  detectionFieldOfView: 45
   avoidanceLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 16
 --- !u!65 &1281985348
 BoxCollider:
   m_ObjectHideFlags: 0

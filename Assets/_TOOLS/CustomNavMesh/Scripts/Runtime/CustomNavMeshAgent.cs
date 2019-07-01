@@ -78,6 +78,18 @@ Date: 27/05/2019
 Description: 
 +Implementing a new float: pathRadius: used to set the precision of the stifness to follow the path 
 +Correcting the case when the agent goes in the wrong direction along the path using the scalar product 
+
+Update n°: 012
+Updated by: Thiebaut Alexis
+Date: 27/06/2019
+Description: 
++Implementing AddAvoidanceLayer and RemoveAvoidanceLayer methods
+
+Update n°: 012
+Updated by: Thiebaut Alexis
+Date: 01/07/2019
+Description: 
++Improving the Avoid Method
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
@@ -97,7 +109,14 @@ public class CustomNavMeshAgent : MonoBehaviour
     #endregion
 
     #region float
-    [SerializeField, Range(.1f, 10)] protected float avoidanceForce = 2;
+    [SerializeField, Range(1, 90)] protected float avoidanceForce = 2;
+    public float AvoidanceForce
+    {
+        get
+        {
+            return (Mathf.Tan(Mathf.Deg2Rad * avoidanceForce) * speed); 
+        }
+    }
 
     [SerializeField, Range(-5, 5)] protected float baseOffset = 0;
 
@@ -234,9 +253,10 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <param name="_direction">Direction from the center position of the obstacle to the hit point of the ray cast</param>
     private void Avoid(Vector3 _direction)
     {
+        _direction.y = 0; 
         _direction.Normalize();
-        Vector3 _avoidance = _direction * avoidanceForce * Time.deltaTime;
-        _avoidance.y = 0;
+        // Avoidance = Tan(avoidanceForce) * velocity * time.deltatime
+        Vector3 _avoidance = _direction * AvoidanceForce * Time.fixedDeltaTime;
         velocity += _avoidance;
         velocity = Vector3.ClampMagnitude(velocity, speed);
     }
@@ -352,7 +372,7 @@ public class CustomNavMeshAgent : MonoBehaviour
                 //Cast the ray
                 if (Physics.Raycast(_ray, out _hitInfo, detectionRange, avoidanceLayer.value))
                 {
-                    //If the hit object isn't a navsurface's child 
+                    //If the hit object isn't a navsurface's child or the agent itself
                     if (!_hitInfo.transform.GetComponentInParent<NavMeshSurface>() && _hitInfo.collider.gameObject != this.gameObject)
                     {
                         // Add the direction to avoid to the list
@@ -363,12 +383,12 @@ public class CustomNavMeshAgent : MonoBehaviour
             //If the obstacle position contains directions to follow in order to avoid the obstacle
             if (_obstaclesPos.Count > 0)
             {
-                // Get the average direcion to follow and avoid in this direction
+                // Get the average direction to follow and avoid in this direction
                 Vector3 _v = Vector3.zero;
                 _obstaclesPos.ForEach(p => _v += p);
                 Avoid(_v);
                 _obstaclesPos = new List<Vector3>();
-                yield return new WaitForEndOfFrame();
+                yield return null;
                 continue;
             }
 
@@ -398,7 +418,7 @@ public class CustomNavMeshAgent : MonoBehaviour
             {
                 Seek(_targetPosition);
             }
-            yield return new WaitForEndOfFrame();
+            yield return null; 
         }
         StopAgent();
         OnDestinationReached?.Invoke();
