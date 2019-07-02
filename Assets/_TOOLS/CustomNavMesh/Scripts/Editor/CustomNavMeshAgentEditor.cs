@@ -174,7 +174,7 @@ public class CustomNavMeshAgentEditor : Editor
         EditorGUILayout.LabelField("DETECTION SETTINGS", _headerStyle);
         EditorGUILayout.PropertyField(detectionAccuracy);
         EditorGUILayout.PropertyField(detectionFieldOfView);
-        EditorGUILayout.PropertyField(detectionRange);
+        EditorGUILayout.Slider(detectionRange, speed.floatValue, 11, "Detection Range"); 
 
         EditorGUILayout.Separator();
 

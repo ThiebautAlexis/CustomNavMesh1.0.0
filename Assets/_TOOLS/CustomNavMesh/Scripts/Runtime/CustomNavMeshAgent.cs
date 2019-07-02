@@ -90,6 +90,7 @@ Updated by: Thiebaut Alexis
 Date: 01/07/2019
 Description: 
 +Improving the Avoid Method
++Improving the Steering Method
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
@@ -166,7 +167,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         }
     }
 
-    [SerializeField, Range(.1f, 10)] protected float steerForce = .1f;
+    [SerializeField, Range(1,89)] protected float steerForce = .1f;
     #endregion
 
     #region Int
@@ -470,14 +471,8 @@ public class CustomNavMeshAgent : MonoBehaviour
     /// <param name="_target"></param>
     private void Seek(Vector3 _target)
     {
-        /*
-         * TROUVER LE VECTEUR ORTHOGONAL A VELOCITY
-         * TROUVER SA LONGUEUR POUR QUE LE STEER CORRESPONDE A LA VELOCITY DECALEE DE STEERFORCE DEGRES
-         * Tan(Mathf.Deg2Rad * angle(velocity, desiredVelocity)) * time.fixedDeltaTime = magnitude du vecteur
-         * 
-         */
         Vector3 _desiredVelocity = (_target - OffsetPosition).normalized * speed;
-        Vector3 _steer = ((_desiredVelocity - velocity) * steerForce * Time.deltaTime);
+        Vector3 _steer = (_desiredVelocity - velocity) * Mathf.Tan(Mathf.Deg2Rad * steerForce) * Time.fixedDeltaTime;
         velocity += _steer;
         velocity = Vector3.ClampMagnitude(velocity, speed);
     }
