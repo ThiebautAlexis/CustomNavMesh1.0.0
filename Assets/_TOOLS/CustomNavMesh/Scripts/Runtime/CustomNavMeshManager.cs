@@ -1,8 +1,6 @@
-﻿using System; 
-using System.Collections;
+using System; 
 using System.Collections.Generic;
 using System.IO;
-using System.Linq; 
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
@@ -33,7 +31,7 @@ Description: Removing the Monobehaviour Behaviour and using RuntimeInitializeOnL
 public static class CustomNavMeshManager
 {
     #region Fields and properties
-    [SerializeField]private static List<Triangle> triangles = new List<Triangle>();
+    [SerializeField] private static List<Triangle> triangles = new List<Triangle>();
     public static List<Triangle> Triangles { get { return triangles; }  }
 
     private static string ResourcesPath { get { return "CustomNavDatas"; } }
@@ -52,35 +50,54 @@ public static class CustomNavMeshManager
 #endif
     }
 
+    /// <summary>
+    /// Load Nav Mesh Datas on the loading of the scene
+    /// </summary>
+    /// <param name="scene">Loaded Scene</param>
+    /// <param name="_mode">Load Scene Mode</param>
     public static void LoadDatas(Scene scene, LoadSceneMode _mode)
     {
-        string _fileName = $"CustomNavData_{scene.name}";
-        TextAsset _textDatas = Resources.Load(Path.Combine(ResourcesPath, _fileName), typeof(TextAsset)) as TextAsset;
-        if (_textDatas == null)
-        {
-            Debug.LogError($"{_fileName} not found.");
-            return;
-        }
-        CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
-        CustomNavData _datas = _loader.DeserializeFileFromTextAsset(_textDatas);
+        CustomNavDataSaver _loader = new CustomNavDataSaver();
+        //CustomNavData _datas = _loader.LoadFile(Path.Combine(Application.dataPath, "Resources", ResourcesPath), scene.name);
+        TextAsset _text = (Resources.Load(Path.Combine(ResourcesPath, "CustomNavData_" + scene.name))) as TextAsset; 
+        if(_text == null) return; 
+        CustomNavData _datas = JsonUtility.FromJson<CustomNavData>(_text.text); 
         triangles = _datas.TrianglesInfos;
+        foreach (Triangle triangle in triangles)
+        {
+            LinkTriangles(triangle);
+        }
     }
 
-    /*
     /// <summary>
-    /// Update the weight of each triangle
+    /// Get all triangles' neighbors and add them to the list of Neighbors
     /// </summary>
-    static void UpdateWeights()
+    public static void LinkTriangles(Triangle _triangle)
     {
-        triangles.ForEach(t => t.UpdateWeight()); 
+        if (_triangle.LinkedTriangles == null) _triangle.LinkedTriangles = new List<Triangle>(); 
+        //COMPARE CURRENT TRIANGLE WITH EVERY OTHER TRIANGLE
+        for (int i = 0; i < triangles.Count; i++)
+        {
+            // IF TRIANGLES ARE THE SAME, DON'T COMPARE THEM
+            if (triangles[i] != _triangle /*&& !triangles[i].HasBeenLinked*/)
+            {
+                // GET THE VERTICES IN COMMON
+                Vertex[] _verticesInCommon = GeometryHelper.GetVerticesInCommon(_triangle, triangles[i]);
+                // CHECK IF THERE IS THE RIGHT AMMOUNT OF VERTICES IN COMMON
+                if (_verticesInCommon.Length == 2)
+                {
+                    _triangle.LinkedTriangles.Add(triangles[i]);
+                }
+            }
+        }
+        _triangle.HasBeenLinked = true;
     }
-    */
     #endregion
 
 }
 
 [Serializable]
-public struct CustomNavData
+public class CustomNavData
 {
     public List<Triangle> TrianglesInfos;
 }

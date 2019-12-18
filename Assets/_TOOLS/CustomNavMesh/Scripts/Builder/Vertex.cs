@@ -1,6 +1,4 @@
 ﻿using System; 
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 /*
@@ -16,6 +14,7 @@ Updated by: Thiebaut Alexis
 Date: 21/11/2018
 Description: - Creation of the object 
 */
+
 [Serializable]
 public class Vertex
 {

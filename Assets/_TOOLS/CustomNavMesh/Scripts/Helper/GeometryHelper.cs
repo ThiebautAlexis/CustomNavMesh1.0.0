@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq; 
 using UnityEngine;
 
@@ -54,7 +52,7 @@ public static class GeometryHelper
 
         Vector3 _ab = _b - _a; // I
         float _anglesign = AngleSign(_a, _b, _c);
-        Vector3 _cd = _anglesign < 0 ? _d - _c : _c - _d; // J
+        Vector3 _cd = _anglesign < 0 ? _d - _c : _c - _d; // J 
 
         Vector3 _pointLeft = _anglesign < 0 ? _c : _d;
 
@@ -83,6 +81,15 @@ public static class GeometryHelper
         return false;
     }
 
+    /// <summary>
+    /// Chack if two segment intersect and return the intersection point
+    /// </summary>
+    /// <param name="_a">start of the first segment</param>
+    /// <param name="_b">end of the first segment</param>
+    /// <param name="_c">start of the second segment</param>
+    /// <param name="_d">end of the second segment</param>
+    /// <param name="_intersection">Intersection Point</param>
+    /// <returns>Does the segments intersect?</returns>
     public static bool IsIntersecting(Vector3 _a, Vector3 _b, Vector3 _c, Vector3 _d, out Vector3 _intersection)
     {
         Vector3 _ab = _b - _a; // I
@@ -137,6 +144,12 @@ public static class GeometryHelper
         return _barycentric.IsInside;
     }
 
+    /// <summary>
+    /// Return true if the position is contained in any triangle
+    /// </summary>
+    /// <param name="_position">Position to check</param>
+    /// <param name="_triangles">List of all triangles</param>
+    /// <returns></returns>
     public static bool IsInAnyTriangle(Vector3 _position, List<Triangle> _triangles)
     {
         for (int i = 0; i < _triangles.Count; i++)
@@ -197,6 +210,13 @@ public static class GeometryHelper
     public static Triangle GetTriangleContainingPosition(Vector3 _position, List<Triangle> triangles)
     {
         RaycastHit _hit;
+        foreach (Triangle triangle in triangles)
+        {
+            if (IsInTriangle(_position, triangle))
+            {
+                return triangle;
+            }
+        }
         if (Physics.Raycast(_position, Vector3.down, out _hit, 5))
         {
             Vector3 _onGroundPosition = _hit.point;
@@ -238,17 +258,24 @@ public static class GeometryHelper
     }
 
     #region Vector3
+    /// <summary>
+    /// Get the closest position within all triangles
+    /// </summary>
+    /// <param name="_position">Checked position</param>
+    /// <param name="_triangles">All Triangles</param>
+    /// <returns></returns>
     public static Vector3 GetClosestPosition(Vector3 _position, List<Triangle> _triangles)
     {
         RaycastHit _hit;
         Vector3 _groundedPosition = _position;
-        if (Physics.Raycast(new Ray(_position, Vector3.down), out _hit))
+        LayerMask _mask = LayerMask.NameToLayer("Ground"); 
+        if (Physics.Raycast(new Ray(_position, Vector3.down), out _hit, 1, _mask))
         {
             _groundedPosition = _hit.point;
         }
         if (IsInAnyTriangle(_groundedPosition, _triangles))
         {
-            // Debug.Log("Return HitPoint");
+
             return _groundedPosition; 
         }
         //Get the closest triangle
@@ -265,13 +292,48 @@ public static class GeometryHelper
             }
         }
 
-        // Debug.Log("Def"); 
         return _triangle.CenterPosition;
     }
 
-
+    /// <summary>
+    /// Get the grounded position of a selected Position
+    /// </summary>
+    /// <param name="_position">Position to check</param>
+    /// <returns></returns>
+    public static Vector3 GetGroundedPosition(Vector3 _position)
+    {
+        RaycastHit _hit;
+        Vector3 _groundedPosition = _position;
+        LayerMask _mask = LayerMask.NameToLayer("Ground");
+        if (Physics.Raycast(new Ray(_position, Vector3.down), out _hit, 1, _mask))
+        {
+            _groundedPosition = _hit.point;
+            return _groundedPosition;
+        }
+        return _position; 
+    }
     #endregion
     #endregion
 
+    /// <summary>
+    /// Compare triangles
+    /// if the triangles have more than 1 vertices in common return true
+    /// </summary>
+    /// <param name="_triangle1">First triangle to compare</param>
+    /// <param name="_triangle2">Second triangle to compare</param>
+    /// <returns>If the triangles have more than 1 vertex.ices in common</returns>
+    public static Vertex[] GetVerticesInCommon(Triangle _triangle1, Triangle _triangle2)
+    {
+        List<Vertex> _vertices = new List<Vertex>();
+        for (int i = 0; i < _triangle1.Vertices.Length; i++)
+        {
+            for (int j = 0; j < _triangle2.Vertices.Length; j++)
+            {
+                if (_triangle1.Vertices[i].Position == _triangle2.Vertices[j].Position)
+                    _vertices.Add(_triangle1.Vertices[i]);
+            }
+        }
+        return _vertices.ToArray();
+    }
     #endregion
 }

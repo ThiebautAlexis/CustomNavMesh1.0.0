@@ -59,26 +59,7 @@ public class CustomNavMeshBuilder : EditorWindow
     }
 
     #region List<TDS_NavPoints>
-    /// <summary>
-    /// Compare triangles
-    /// if the triangles have more than 1 vertices in common return true
-    /// </summary>
-    /// <param name="_triangle1">First triangle to compare</param>
-    /// <param name="_triangle2">Second triangle to compare</param>
-    /// <returns>If the triangles have more than 1 vertex.ices in common</returns>
-    Vertex[] GetVerticesInCommon(Triangle _triangle1, Triangle _triangle2)
-    {
-        List<Vertex> _vertices = new List<Vertex>();
-        for (int i = 0; i < _triangle1.Vertices.Length; i++)
-        {
-            for (int j = 0; j < _triangle2.Vertices.Length; j++)
-            {
-                if (_triangle1.Vertices[i] == _triangle2.Vertices[j])
-                    _vertices.Add(_triangle1.Vertices[i]);
-            }
-        }
-        return _vertices.ToArray();
-    }
+
     #endregion
 
     #region void
@@ -156,10 +137,10 @@ public class CustomNavMeshBuilder : EditorWindow
             Triangle _triangle = new Triangle(_pointsIndex);
             triangles.Add(_triangle);
         }
-        foreach (Triangle t in triangles)
-        {
-            LinkTriangles(t);
-        }
+        //foreach (Triangle t in triangles)
+        //{
+        //    LinkTriangles(t);
+        //}
         isBuilding = false;
         SaveDatas(); 
     }
@@ -176,7 +157,7 @@ public class CustomNavMeshBuilder : EditorWindow
             if (triangles[i] != _triangle /*&& !triangles[i].HasBeenLinked*/)
             {
                 // GET THE VERTICES IN COMMON
-                Vertex[] _verticesInCommon = GetVerticesInCommon(_triangle, triangles[i]);
+                Vertex[] _verticesInCommon = GeometryHelper.GetVerticesInCommon(_triangle, triangles[i]);
                 // CHECK IF THERE IS THE RIGHT AMMOUNT OF VERTICES IN COMMON
                 if (_verticesInCommon.Length == 2)
                 {
@@ -205,10 +186,10 @@ public class CustomNavMeshBuilder : EditorWindow
     public void SaveDatas()
     {
         if (!Directory.Exists(SavingDirectory)) Directory.CreateDirectory(SavingDirectory);
-        CustomNavDataSaver<CustomNavData> _navDataSaver = new CustomNavDataSaver<CustomNavData>();
+        CustomNavDataSaver _navDataSaver = new CustomNavDataSaver();
         CustomNavData _dataSaved = new CustomNavData();
         _dataSaved.TrianglesInfos = triangles;
-        _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved, ".txt");
+        _navDataSaver.SaveFile(SavingDirectory, EditorSceneManager.GetActiveScene().name, _dataSaved);
         OpenDirectory(); 
     }
 
@@ -217,19 +198,10 @@ public class CustomNavMeshBuilder : EditorWindow
     /// </summary>
     private void LoadDatas()
     {
-        string _fileName = $"CustomNavData_{SceneManager.GetActiveScene().name}";
-        TextAsset _textDatas = Resources.Load(Path.Combine("CustomNavDatas", _fileName), typeof(TextAsset)) as TextAsset;
-        if (_textDatas != null)
-        {
-            CustomNavDataSaver<CustomNavData> _loader = new CustomNavDataSaver<CustomNavData>();
-            CustomNavData _datas = _loader.DeserializeFileFromTextAsset(_textDatas);
-            triangles = _datas.TrianglesInfos;
-        }
-        else
-        {
-            Debug.Log("Not found"); 
-        }
-
+        CustomNavDataSaver _loader = new CustomNavDataSaver();
+        CustomNavData _datas = _loader.LoadFile(Path.Combine(Application.dataPath, "Resources", "CustomNavDatas"), SceneManager.GetActiveScene().name);
+        if (_datas == null) return; 
+        triangles = _datas.TrianglesInfos;
     }
     #endregion
 

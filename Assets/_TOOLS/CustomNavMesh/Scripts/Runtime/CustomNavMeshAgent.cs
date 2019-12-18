@@ -90,7 +90,6 @@ Updated by: Thiebaut Alexis
 Date: 01/07/2019
 Description: 
 +Improving the Avoid Method
-+Improving the Steering Method
 */
 public class CustomNavMeshAgent : MonoBehaviour
 {
@@ -131,7 +130,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     {
         get
         {
-            return radius * .75f;
+            return radius;
         }
         set
         {
@@ -257,6 +256,7 @@ public class CustomNavMeshAgent : MonoBehaviour
         _direction.Normalize();
         // Avoidance = Tan(avoidanceForce) * velocity * time.deltatime
         Vector3 _avoidance = _direction * AvoidanceForce * Time.fixedDeltaTime;
+        Debug.DrawLine(transform.position + velocity, transform.position + velocity + _avoidance, Color.red, 1); 
         velocity += _avoidance;
         velocity = Vector3.ClampMagnitude(velocity, speed);
     }
@@ -271,7 +271,6 @@ public class CustomNavMeshAgent : MonoBehaviour
         if (CustomNavMeshManager.Triangles == null || CustomNavMeshManager.Triangles.Count == 0)
         {
             Debug.LogWarning("Triangles Not found. Must build the navmesh for the scene");
-            //Destroy(this);
             return false;
         }
         if (isMoving)
@@ -360,7 +359,6 @@ public class CustomNavMeshAgent : MonoBehaviour
                 Seek(_nextPosition);
                 continue;
             }
-
             // Theta is equal to the angle between the velocity and the forward vector
             _theta = Vector3.SignedAngle(Vector3.forward, velocity, Vector3.up);
 
@@ -379,7 +377,7 @@ public class CustomNavMeshAgent : MonoBehaviour
                     if (!_hitInfo.transform.GetComponentInParent<NavMeshSurface>() && _hitInfo.collider.gameObject != this.gameObject)
                     {
                         // Add the direction to avoid to the list
-                        _dir = (_hitInfo.point - _hitInfo.transform.position);
+                        _dir = velocity - (_hitInfo.point - transform.position);
                         _dir.y = 0;
                         _obstaclesPos.Add(_dir);
                     }
@@ -396,7 +394,6 @@ public class CustomNavMeshAgent : MonoBehaviour
                 yield return null;
                 continue;
             }
-
             /* Get the predicted Velocity and the Predicted position*/
             _predictedPosition = OffsetPosition + velocity;
 
@@ -418,7 +415,7 @@ public class CustomNavMeshAgent : MonoBehaviour
             */
             _distance = Vector3.Distance(_predictedPosition, _normalPoint);
             _scalarProduct = Vector3.Dot(velocity.normalized, _dir.normalized);
-            if (_distance > pathRadius / 2 || _scalarProduct == -1)
+            if (_distance > pathRadius / 2 || _scalarProduct == -1 || velocity == Vector3.zero)
             {
                 Seek(_targetPosition);
             }
@@ -472,6 +469,7 @@ public class CustomNavMeshAgent : MonoBehaviour
     private void Seek(Vector3 _target)
     {
         Vector3 _desiredVelocity = (_target - OffsetPosition).normalized * speed;
+
         Vector3 _steer = (_desiredVelocity - velocity) * Mathf.Tan(Mathf.Deg2Rad * steerForce) * Time.fixedDeltaTime;
         velocity += _steer;
         velocity = Vector3.ClampMagnitude(velocity, speed);

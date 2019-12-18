@@ -56,13 +56,13 @@ public static class PathCalculator
     /// <returns>Return if the path can be calculated</returns>
     public static bool CalculatePath(Vector3 _origin, Vector3 _destination, CustomNavPath _path, List<Triangle> _trianglesDatas)
     {
-        Vector3 _groundedOrigin = GeometryHelper.GetClosestPosition(_origin, _trianglesDatas);
+        Vector3 _groundedOrigin = GeometryHelper.GetGroundedPosition(_origin);
         Vector3 _groundedDestination = GeometryHelper.GetClosestPosition(_destination, _trianglesDatas);
 
         // GET TRIANGLES
         // Get the origin triangle and the destination triangle
-        Triangle _originTriangle = GeometryHelper.GetTriangleContainingPosition(_origin, _trianglesDatas);
-        Triangle _targetedTriangle = GeometryHelper.GetTriangleContainingPosition(_destination, _trianglesDatas);
+        Triangle _originTriangle = GeometryHelper.GetTriangleContainingPosition(_groundedOrigin, _trianglesDatas);
+        Triangle _targetedTriangle = GeometryHelper.GetTriangleContainingPosition(_groundedDestination, _trianglesDatas);
 
         //Open list that contains all heuristically calculated triangles 
         List<Triangle> _openList = new List<Triangle>();
@@ -181,6 +181,14 @@ public static class PathCalculator
     /// <param name="_pathToBuild">Astar resources</param>
     static void BuildPath(Dictionary<Triangle, Triangle> _pathToBuild, CustomNavPath _path, Vector3 _origin, Vector3 _destination)
     {
+        if(_pathToBuild.Count == 1)
+        {
+            List<Vector3> _pathPoints = new List<Vector3>();
+            _pathPoints.Add(_origin);
+            _pathPoints.Add(_destination);
+            _path.SetPath(_pathPoints);
+            return; 
+        }
         #region BuildingAbsolutePath
         // Building absolute path -> Link all triangle's CenterPosition together
         // Adding _origin and destination to the path
@@ -252,14 +260,17 @@ public static class PathCalculator
                         _rightVertices[i] = _vertex2;
                     }
                     break;
+
                 }
             }
         }
 
         //Initialize start portal vertices
         _startLinePoint = _origin;
+        _startLinePoint.y = _absoluteTrianglePath[1].CenterPosition.y; 
         _endLinePoint = _absoluteTrianglePath[1].CenterPosition;
-        _currentTriangle = _absoluteTrianglePath[0]; 
+        _currentTriangle = _absoluteTrianglePath[0];
+
         for (int j = 0; j < _currentTriangle.Vertices.Length; j++)
         {
             int k = j + 1 >= _currentTriangle.Vertices.Length ? 0 : j + 1;
@@ -280,37 +291,11 @@ public static class PathCalculator
                 break;
             }
         }
-
         // Initialise end portal vertices -> Close the funnel
 
         _leftVertices[_leftVertices.Length - 1] = _destination;
         _rightVertices[_rightVertices.Length - 1] = _destination;
 
-        /*
-        _currentTriangle = _absoluteTrianglePath[_absoluteTrianglePath.Count - 1]; 
-        _startLinePoint = _currentTriangle.CenterPosition;
-        _endLinePoint = _destination;
-        for (int j = 0; j < _currentTriangle.Vertices.Length; j++)
-        {
-            int k = j + 1 >= _currentTriangle.Vertices.Length ? 0 : j + 1;
-            _vertex1 = _currentTriangle.Vertices[j].Position;
-            _vertex2 = _currentTriangle.Vertices[k].Position; ;
-            if (GeometryHelper.IsIntersecting(_startLinePoint, _endLinePoint, _vertex1, _vertex2))
-            {
-                if (GeometryHelper.AngleSign(_startLinePoint, _endLinePoint, _vertex1) > 0)
-                {
-                    _leftVertices[_leftVertices.Length -1] = _vertex2;
-                    _rightVertices[_rightVertices.Length - 1] = _vertex1;
-                }
-                else
-                {
-                    _leftVertices[_leftVertices.Length - 1] = _vertex1;
-                    _rightVertices[_rightVertices.Length - 1] = _vertex2;
-                }
-                break;
-            }
-        }
-        */
         #endregion
 
         //Step through the channel
@@ -415,6 +400,7 @@ public static class PathCalculator
         }
 
         _simplifiedPath.Add(_destination);
+
         //Set the simplifiedPath
         _path.SetPath(_simplifiedPath);
     }

@@ -1,10 +1,6 @@
-﻿using System; 
-using System.Collections;
+using System; 
 using System.Collections.Generic;
 using UnityEngine;
-using Random = UnityEngine.Random;
-
-#pragma warning disable 
 
 /*
 [Script Header] TDS_Triangle Version 0.0.1
@@ -45,10 +41,9 @@ public class Triangle
         }
     }
 
-    [SerializeField] List<Triangle> linkedTriangles = new List<Triangle>(); 
-    public List<Triangle> LinkedTriangles { get { return linkedTriangles; } }
+    public List<Triangle> LinkedTriangles{ get; set;}
 
-    public bool HasBeenLinked = false;
+    [NonSerialized] public bool HasBeenLinked = false;
 
     public bool HasBeenSelected { get; set; }
 
@@ -89,7 +84,8 @@ public class Triangle
         float _b = Vector3.Distance(vertices[1].Position, vertices[2].Position);
         float _c = Vector3.Distance(vertices[2].Position, vertices[0].Position); 
         float _p = ( _a + _b  + _c )/2;
-        surface = Mathf.Sqrt(_p * (_p - _a) * (_p - _b) * (_p - _c)); 
+        surface = Mathf.Sqrt(_p * (_p - _a) * (_p - _b) * (_p - _c));
+
     }
     #endregion
 
@@ -119,6 +115,7 @@ public class Triangle
         }
     }
     */
+
     #endregion
 }
 
@@ -164,10 +161,4 @@ public struct Barycentric
         v = (bLen * ac - ab * bc) / d;
         w = 1.0f - u - v;
     }
-
-
 }
-
-
-
-

@@ -2,6 +2,8 @@ using System.Collections.Generic;
 
 namespace UnityEngine.AI
 {
+#pragma warning disable 0618
+
     public enum CollectObjects
     {
         All = 0,

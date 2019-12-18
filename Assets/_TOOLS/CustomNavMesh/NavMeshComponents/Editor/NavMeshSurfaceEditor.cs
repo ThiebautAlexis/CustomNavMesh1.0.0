@@ -9,6 +9,8 @@ using UnityEngine;
 
 namespace UnityEditor.AI
 {
+#pragma warning disable 0618
+
     [CanEditMultipleObjects]
     [CustomEditor(typeof(NavMeshSurface))]
     class NavMeshSurfaceEditor : Editor
